@@ -8,6 +8,7 @@ export default class Mapper<T> {
         let i = this.items.get(id);
         if(i == undefined) return;
         cb(i);
+        this.items.set(id, undefined);
     }
     public getItem(id: string, cb?: (obj: T) => void):T | undefined {
         if(cb != undefined) {
