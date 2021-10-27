@@ -36,6 +36,7 @@ function onDataRecive(arg: number, data: Buffer) {
         }
     }
     mapper.getItem(arg.toString(), (obj: Socket) => {
+        console.log("[local => extern] GETTING data from ", arg);
         if(false == obj.write(data)) {
             client.sendData(Buffer.from("PTSTP"), arg);
         }
@@ -62,6 +63,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         }).on("end", () => {
             client.sendData(Buffer.from("PTCLS"), parseInt(referPort));
         }).on("data", (data: Buffer) => {
+            console.log("[extern => local]Send Data with", referPort);
             client.sendData(data, parseInt(referPort));
         });
 

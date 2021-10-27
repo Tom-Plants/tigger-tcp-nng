@@ -33,8 +33,13 @@ function onDataRecive(arg: number, data: Buffer) {
         }else if(cmd == "COPEN") {
             let conn = createConnection({host: thost, port: tport}).on("end", () => {
             }).on("data", (data: Buffer) => {
+                console.log("[extern => server]Send data with", arg);
                 server.sendData(data, arg);
-            });
+            }).on("close", () => {
+                mapper.removeItem(arg.toString(), (obj: Socket) => {
+                    obj.destroy();
+                });
+            })
 
             mapper.setItem(arg.toString(), conn);
         }else if(cmd == "CHALF") {
@@ -56,6 +61,7 @@ function onDataRecive(arg: number, data: Buffer) {
 
     mapper.getItem(arg.toString(), (obj: Socket) => {
         if(false == obj.write(data)) {
+            console.log("[server => extern]send data with ", arg);
             server.sendData(Buffer.from("PTSTP"), arg);
         }
     });
