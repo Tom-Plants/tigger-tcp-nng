@@ -23,7 +23,7 @@ export default class Client implements ITunnel {
     }
 
     sendData(data: Buffer): void {
-        this.pair.send(data);
+        console.log(this.pair.send(data));
     }
     onDataRecived(callback: DataReciveCallback): void {
         this.dataReciveCallbacks.push(callback);
