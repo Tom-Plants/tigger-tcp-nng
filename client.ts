@@ -45,7 +45,8 @@ function onDataRecive(arg: number, data: Buffer) {
 
 function createLocalServer(port_listen: number, host_listen: string): Server {
     return createServer({
-        allowHalfOpen: true
+        allowHalfOpen: true,
+        pauseOnConnect: true
     }).listen({port: port_listen, hostname: host_listen}, () => {
         console.log("Client listening ", host_listen, ":", port_listen);
     }).on("connection", (socket: Socket) => {
