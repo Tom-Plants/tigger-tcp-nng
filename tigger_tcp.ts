@@ -1,7 +1,7 @@
 import arg from "arg";
 import { ListenOptions, TcpSocketConnectOpts } from "net";
 import StartClient from "./client";
-import StartServer from "./Server";
+import StartServer from "./server";
 
 try{
     const args = arg({
