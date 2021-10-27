@@ -40,7 +40,7 @@ function onDataRecive(arg: number, data: Buffer) {
                 mapper.removeItem(arg.toString(), (obj: Socket) => {
                     obj.destroy();
                 });
-            })
+            }).on("error", () => {});
 
             mapper.setItem(arg.toString(), conn);
         }else if(cmd == "CHALF") {

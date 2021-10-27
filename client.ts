@@ -65,7 +65,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         }).on("data", (data: Buffer) => {
             console.log("[extern => local]Send Data with", referPort);
             client.sendData(data, parseInt(referPort));
-        });
+        }).on('error', () => {});
 
         console.log("新的传入链接", referPort);
         client.sendData(Buffer.from("COPEN"), parseInt(referPort));
