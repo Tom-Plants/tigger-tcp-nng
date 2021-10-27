@@ -21,7 +21,7 @@ function onDataRecive(arg: number, data: Buffer) {
             mapper.removeItem(arg.toString(), (obj: Socket) => {
                 obj.destroy();
             });
-        }else if(cmd == "CHALF") {
+        }else if(cmd == "SHALF") {
             mapper.getItem(arg.toString(), (obj: Socket) => {
                 obj.end();
             });
@@ -30,6 +30,7 @@ function onDataRecive(arg: number, data: Buffer) {
                 obj.pause();
             })
         }else if(cmd == "PTCTN") {
+            console.log("服务端指示", arg, "继续运行");
             mapper.getItem(arg.toString(), (obj: Socket) => {
                 obj.resume();
             });
@@ -62,7 +63,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
                 obj.destroy();
             });
         }).on("end", () => {
-            client.sendData(Buffer.from("PTCLS"), parseInt(referPort));
+            client.sendData(Buffer.from("CHALF"), parseInt(referPort));
         }).on("data", (data: Buffer) => {
             console.log("[extern => local]Send Data with", referPort);
             client.sendData(data, parseInt(referPort));

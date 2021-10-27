@@ -32,8 +32,10 @@ function onDataRecive(arg: number, data: Buffer) {
             });
         }else if(cmd == "COPEN") {
             console.log("接收到客户端的传入链接", arg);
-            let conn = createConnection({host: thost, port: tport}).on("end", () => {
+            let conn = createConnection({host: thost, port: tport}, () => {
                 server.sendData(Buffer.from("PTCTN"), arg);
+            }).on("end", () => {
+                server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
                 console.log("[extern => server]Send data with", arg);
                 server.sendData(data, arg);
