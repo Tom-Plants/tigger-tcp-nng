@@ -1,0 +1,25 @@
+{
+  "name": "tigger-tcp-nng",
+  "version": "1.0.0",
+  "description": "tigger-tcp from nanomsg",
+  "main": "tigger_tcp.ts",
+  "scripts": {
+    "build": "npx tsc",
+    "client": "node tigger_tcp.js --type=client",
+    "server": "node tigger_tcp.js --type=server"
+  },
+  "keywords": [
+    "Tigger-tcp"
+  ],
+  "author": "Assembly",
+  "license": "ISC",
+  "dependencies": {
+    "arg": "^5.0.1",
+    "nanomsg": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/nanomsg": "^3.2.3",
+    "@types/node": "^16.11.6",
+    "typescript": "^4.4.4"
+  }
+}
