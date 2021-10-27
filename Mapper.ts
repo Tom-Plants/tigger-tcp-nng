@@ -6,10 +6,16 @@ export default class Mapper<T> {
     public removeItem(id: string, cb : (obj: T)=> void): void {
         //this.avoidNullCall(cb)(this.items[id]);
         let i = this.items.get(id);
-        if(i != undefined) cb(i);
-        this.items.set(id, undefined);
+        if(i == undefined) return;
+        cb(i);
     }
-    public getItem(id: string):T | undefined {
+    public getItem(id: string, cb?: (obj: T) => void):T | undefined {
+        if(cb != undefined) {
+            let item = this.items.get(id);
+            if(item != undefined) {
+                cb(item);
+            }
+        }
         return this.items.get(id);
     }
     public setItem(id: string, obj: T): void {
