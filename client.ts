@@ -35,6 +35,7 @@ function onDataRecive(arg: number, data: Buffer) {
                 obj.resume();
             });
         }
+        return;
     }
     mapper.getItem(arg.toString(), (obj: Socket) => {
         console.log("[local => extern] GETTING data from ", arg);
