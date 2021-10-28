@@ -1,13 +1,19 @@
 import Server from "./transmission/server";
 import Client from "./transmission/client";
 import {socket ,Socket} from "nanomsg";
-
+let count = 0;
 let a: Socket = socket("pair", {
     rcvmaxsize: -1
 });
 
 a.connect("tcp://45.135.135.142:12345");
-console.log(a.send(Buffer.alloc(1024*1024*1024)));
+
+
+while(1) {
+    console.log(count++);
+    a.send(Buffer.alloc(1024*10));
+
+}
 // console.log(a.send("hello world"));
 
 // let client = new Client("ali1.0x7c00.site", 12345, 8);
