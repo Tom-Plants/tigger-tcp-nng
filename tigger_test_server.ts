@@ -1,6 +1,8 @@
 import {socket ,Socket} from "nanomsg";
 
-let a: Socket = socket("pair");
+let a: Socket = socket("pair", {
+    rcvmaxsize: -1
+});
 
 a.bind("tcp://0.0.0.0:12345");
 
