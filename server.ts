@@ -37,7 +37,7 @@ function onDataRecive(arg: number, data: Buffer) {
             }).on("end", () => {
                 server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
-                console.log("[extern => server]Send data with", arg);
+                //console.log("[extern => server]Send data with", arg);
                 server.sendData(data, arg);
             }).on("close", () => {
                 mapper.removeItem(arg.toString(), (obj: Socket) => {
@@ -65,7 +65,7 @@ function onDataRecive(arg: number, data: Buffer) {
 
     mapper.getItem(arg.toString(), (obj: Socket) => {
         if(false == obj.write(data)) {
-            console.log("[server => extern]send data with ", arg);
+            //console.log("[server => extern]send data with ", arg);
             server.sendData(Buffer.from("PTSTP"), arg);
         }
     });

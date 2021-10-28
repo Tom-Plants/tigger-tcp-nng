@@ -19,7 +19,6 @@ export default class Server implements ITransmission {
 
         this.mixer.onNummedPacketRecived((arg: Number, data: Buffer) => {
 
-            console.log("<", arg, data);
             this.dataReciveCallbacks.map((cb: TDataReciveCallback) => {
                 cb(arg.valueOf(), data);
             });
@@ -42,7 +41,7 @@ export default class Server implements ITransmission {
     sendData(data: Buffer, sourcePort: number): void {
         let splitBuffer = this.patcher.patch(data, sourcePort);
 
-        console.log(">", sourcePort, data);
+        //console.log(">", sourcePort, data);
         this.servers.map((client: TServer, index: number) => {
             client.sendData(splitBuffer[index]);
         });

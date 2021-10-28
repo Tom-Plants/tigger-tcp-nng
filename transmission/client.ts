@@ -18,7 +18,6 @@ export default class Client implements ITransmission {
         this.openTunnels(host, port, tunnelN);
 
         this.mixer.onNummedPacketRecived((arg: Number, data: Buffer) => {
-            console.log("<", arg, data);
             this.dataReciveCallbacks.map((cb: TDataReciveCallback) => {
                 cb(arg.valueOf(), data);
             });
@@ -41,7 +40,7 @@ export default class Client implements ITransmission {
     sendData(data: Buffer, sourcePort: number): void {
         let splitBuffer = this.patcher.patch(data, sourcePort);
 
-        console.log(">", sourcePort, data);
+        //console.log(">", sourcePort, data);
         this.clients.map((client: TClient, index: number) => {
             client.sendData(splitBuffer[index]);
         });

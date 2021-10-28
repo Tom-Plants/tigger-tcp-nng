@@ -25,6 +25,7 @@ export default class NummedPacketMixer extends PacketMixer {
                 return;
             }
             let currentPacketNumber = data.readUInt8(0);
+
             if(currentPacketNumber != this.nextPacketNumber) {
                 this.mapper.set(currentPacketNumber, data);
             }else {
