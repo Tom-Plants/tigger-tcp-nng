@@ -13,7 +13,8 @@ export default class Client implements ITunnel {
             reconn: 100,
             maxreconn: 0,
             sndbuf: 1024*1024*100,
-            rcvbuf: 1024*1024*100
+            rcvbuf: 1024*1024*100,
+            sndtimeo: 1000*5
         });
         this.dataReciveCallbacks = new Array<DataReciveCallback>();
         this.init(host, port);
