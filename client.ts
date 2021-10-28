@@ -68,7 +68,10 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         }).on("data", (data: Buffer) => {
             //console.log("[extern => local]Send Data with", referPort);
             client.sendData(data, parseInt(referPort));
-        }).on('error', () => {});
+        }).on('error', () => {})
+        .on('drain', () => {
+            client.sendData(Buffer.from("PTCTN"), parseInt(referPort));
+        });
 
         console.log("新的传入链接", referPort);
         client.sendData(Buffer.from("COPEN"), parseInt(referPort));

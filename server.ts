@@ -43,7 +43,10 @@ function onDataRecive(arg: number, data: Buffer) {
                 mapper.removeItem(arg.toString(), (obj: Socket) => {
                     obj.destroy();
                 });
-            }).on("error", () => {});
+            }).on("error", () => {})
+            .on("drain", () => {
+                server.sendData(Buffer.from("PTCTN"), arg);
+            });
 
             mapper.setItem(arg.toString(), conn);
         }else if(cmd == "CHALF") {
