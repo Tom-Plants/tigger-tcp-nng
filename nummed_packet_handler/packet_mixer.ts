@@ -15,36 +15,41 @@ export default class NummedPacketMixer extends PacketMixer {
         this.mapper = new Map<number, Buffer>();
 
         this.analyze((arg: Number, data: Buffer) => {
+            let currentPacketNumber = data.readUInt8(0);
+            let nextPacketNumber = data.readUInt8(1);
+
             if(this.nextPacketNumber == -1)
             {
-                this.nextPacketNumber = data.readUInt8(0);
-
-                console.log("下一个包号是", this.nextPacketNumber);
-
-                this.callDataReciveCallbacks(arg, data.slice(1, data.length));
+                //init
+                this.nextPacketNumber = nextPacketNumber;
+                console.log("currentPacket is", currentPacketNumber, "the nextpacket is", nextPacketNumber);
+                this.callDataReciveCallbacks(arg, data.slice(2, data.length));
                 return;
             }
-            let currentPacketNumber = data.readUInt8(0);
 
             if(currentPacketNumber != this.nextPacketNumber) {
                 this.mapper.set(currentPacketNumber, data);
             }else {
-                this.nextPacketNumber = data.readUInt8(0);
+                this.nextPacketNumber = nextPacketNumber;
 
                 console.log("下一个包号是", this.nextPacketNumber);
 
-                this.callDataReciveCallbacks(arg, data.slice(1, data.length));
+                this.callDataReciveCallbacks(arg, data.slice(2, data.length));
                 return;
             }
 
-            let packet = this.mapper.get(this.nextPacketNumber);
-            if(packet == undefined) return;
+            while(true) {
+                let packet = this.mapper.get(this.nextPacketNumber);
+                if(packet == undefined) break;
 
-            this.nextPacketNumber = data.readUInt8(0);
+                this.mapper.delete(this.nextPacketNumber);
+                this.nextPacketNumber = nextPacketNumber;
 
-            console.log("下一个包号是", this.nextPacketNumber);
+                console.log("下一个包号是", this.nextPacketNumber);
 
-            this.callDataReciveCallbacks(arg, data.slice(1, data.length));
+                this.callDataReciveCallbacks(arg, data.slice(2, data.length));
+            }
+
         });
     }
 
