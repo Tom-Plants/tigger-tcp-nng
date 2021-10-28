@@ -1,4 +1,3 @@
-import { timeStamp } from "console";
 import PacketMixer from "../packet_handler/packet_mixer";
 
 
@@ -18,11 +17,12 @@ export default class NummedPacketMixer extends PacketMixer {
             let currentPacketNumber = data.readUInt8(0);
             let nextPacketNumber = data.readUInt8(1);
 
+            console.log("<", currentPacketNumber, nextPacketNumber);
+
             if(this.nextPacketNumber == -1)
             {
                 //init
                 this.nextPacketNumber = nextPacketNumber;
-                console.log("currentPacket is", currentPacketNumber, "the nextpacket is", nextPacketNumber);
                 this.callDataReciveCallbacks(arg, data.slice(2, data.length));
                 return;
             }
@@ -32,7 +32,6 @@ export default class NummedPacketMixer extends PacketMixer {
             }else {
                 this.nextPacketNumber = nextPacketNumber;
 
-                console.log("下一个包号是", this.nextPacketNumber);
 
                 this.callDataReciveCallbacks(arg, data.slice(2, data.length));
                 return;
@@ -45,7 +44,6 @@ export default class NummedPacketMixer extends PacketMixer {
                 this.mapper.delete(this.nextPacketNumber);
                 this.nextPacketNumber = nextPacketNumber;
 
-                console.log("下一个包号是", this.nextPacketNumber);
 
                 this.callDataReciveCallbacks(arg, data.slice(2, data.length));
             }

@@ -17,6 +17,7 @@ export default class NummedPacketPatcher extends PacketPatcher {
     patch(data: Buffer, port: number):Buffer[] {
         let l:Buffer = Buffer.from([this.currentPacketNumber, this.nextPacketNumber]);
 
+        console.log(">", "packet:", this.currentPacketNumber, this.nextPacketNumber);
         this.currentPacketNumber = this.nextPacketNumber;
         this.nextPacketNumber = this.randomler.getANumber();
 
