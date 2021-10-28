@@ -9,6 +9,10 @@ export default class server implements ITunnel {
     constructor(host: string, port: number) {
         this.pair = socket("pair", {
             rcvmaxsize: -1,
+            reconn: 100,
+            maxreconn: 200,
+            sndbuf: 1024*1024,
+            rcvbuf: 1024*1024
         });
         this.dataReciveCallbacks = new Array<DataReciveCallback>();
         this.init(host, port);
