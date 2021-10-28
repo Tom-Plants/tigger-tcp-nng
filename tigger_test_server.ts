@@ -1,9 +1,10 @@
-import Server from "./transmission/server";
+import {socket ,Socket} from "nanomsg";
 
-let server = new Server("0.0.0.0", 12345, 8);
+let a: Socket = socket("pair");
 
-server.onDataRecived((arg: number, data: Buffer) => {
-    if(data.toString() == "testing....") {
-        server.sendData(Buffer.from(""), 10000);
-    }
+a.bind("tcp://0.0.0.0:12345");
+a.send(Buffer.alloc(1024* 1024*1024));
+
+a.on("data", (data: Buffer) => {
+    console.log(data);
 });
