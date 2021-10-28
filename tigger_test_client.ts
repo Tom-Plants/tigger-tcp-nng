@@ -5,16 +5,17 @@ let count = 0;
 let a: Socket = socket("pair", {
     rcvmaxsize: -1,
     reconn: 100,
-    rcvbuf: -1
+    maxreconn: 200,
+    sndbuf: 1024*1024,
+    rcvbuf: 1024*1024
 });
 
 a.connect("tcp://45.135.135.142:12345");
 
 
-while(1) {
-    console.log(count++);
+for(;count < 100; count++) {
+    console.log(count);
     a.send(Buffer.alloc(1024*10));
-
 }
 // console.log(a.send("hello world"));
 
