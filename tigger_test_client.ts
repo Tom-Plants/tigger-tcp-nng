@@ -1,7 +1,7 @@
 import Client from "./transmission/client";
 let count = 0;
 
-let client = new Client("45.135.135.142", 12345, 8);
+let client = new Client("45.135.135.142", 12345, 1);
 
 for(;count < 100; count++) {
     console.log(count);
