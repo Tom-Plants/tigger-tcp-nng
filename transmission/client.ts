@@ -1,5 +1,5 @@
-import PacketPatcher from "../nummed_packet_handler/packet_patcher";
-import PacketMixer from "../nummed_packet_handler/packet_mixer";
+import PacketPatcher from "../packet_handler/packet_patcher";
+import PacketMixer from "../packet_handler/packet_mixer";
 import { TDataReciveCallback } from "../public/types";
 import TClient from "../tunnel/client";
 import ITransmission from "./itransmission";
@@ -17,7 +17,7 @@ export default class Client implements ITransmission {
         this.dataReciveCallbacks = new Array<TDataReciveCallback>();
         this.openTunnels(host, port, tunnelN);
 
-        this.mixer.onNummedPacketRecived((arg: Number, data: Buffer) => {
+        this.mixer.analyze((arg: Number, data: Buffer) => {
             this.dataReciveCallbacks.map((cb: TDataReciveCallback) => {
                 cb(arg.valueOf(), data);
             });
