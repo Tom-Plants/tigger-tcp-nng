@@ -8,7 +8,9 @@ export default class Client implements ITunnel {
     private dataReciveCallbacks: DataReciveCallback[];
 
     constructor(host: string, port: number) {
-        this.pair = socket("pair");
+        this.pair = socket("pair", {
+            rcvmaxsize: -1,
+        });
         this.dataReciveCallbacks = new Array<DataReciveCallback>();
         this.init(host, port);
     }
