@@ -45,7 +45,7 @@ export default class PacketMixer {
             this.analyzePackets(p);
         }
     }
-    public analyze(cb: (arg:number, data: Buffer) => void)
+    private analyze(cb: (arg:number, data: Buffer) => void)
     {
         this.cb = cb;
     }
