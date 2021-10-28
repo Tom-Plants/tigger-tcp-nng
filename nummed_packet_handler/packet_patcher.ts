@@ -7,12 +7,13 @@ export default class NummedPacketPatcher extends PacketPatcher {
 
     constructor(tunnelN: number) {
         super(tunnelN);
-
         this.randomler = new Random(0, 256);
     }
     
     patch(data: Buffer, port: number):Buffer[] {
-        let l:Buffer = Buffer.from([this.randomler.getANumber()]);
+        let r = this.randomler.getANumber();
+        console.log("current packet number is", r);
+        let l:Buffer = Buffer.from([r]);
         return super.patch(Buffer.concat([l, data]), port);
     }
 }
