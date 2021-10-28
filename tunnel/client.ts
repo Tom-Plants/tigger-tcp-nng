@@ -11,9 +11,9 @@ export default class Client implements ITunnel {
         this.pair = socket("pair", {
             rcvmaxsize: -1,
             reconn: 100,
-            maxreconn: 200,
-            sndbuf: 1024*1024,
-            rcvbuf: 1024*1024
+            maxreconn: 0,
+            sndbuf: 1024*1024*100,
+            rcvbuf: 1024*1024*100
         });
         this.dataReciveCallbacks = new Array<DataReciveCallback>();
         this.init(host, port);
