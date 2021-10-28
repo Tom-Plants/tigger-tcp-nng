@@ -1,16 +1,9 @@
-import {socket ,Socket} from "nanomsg";
-
+import Server from "./transmission/server";
 let count = 0;
-let a: Socket = socket("pair", {
-    rcvmaxsize: -1,
-    reconn: 100,
-    maxreconn: 200,
-    sndbuf: 1024*1024,
-    rcvbuf: 1024*1024
-});
 
-a.bind("tcp://0.0.0.0:12345");
+let server = new Server("0.0.0.0", 12345, 8);
 
-a.on("data", (data: Buffer) => {
-    console.log(count++, data);
+
+server.onDataRecived((arg: number, data: Buffer) => {
+    console.log(count++, arg, data);
 });
