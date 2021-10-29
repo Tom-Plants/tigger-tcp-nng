@@ -1,4 +1,3 @@
-import EventEmitter from "events";
 import { Socket } from "net";
 import { DataReciveCallback, VoidCallBack } from "../public/types";
 import ITunnel from "./itunnel";
