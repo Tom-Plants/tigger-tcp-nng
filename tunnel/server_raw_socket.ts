@@ -1,11 +1,11 @@
-import { Socket } from "net";
+import { createServer, Socket } from "net";
 import getServer from "./socketcreator";
 import Tunnel from "./tunnel";
 
 export default class RawSocketServer extends Tunnel {
     constructor(host: string, port: number) {
         super();
-        let server = getServer();
+        let server = createServer();
         server.listen(port, host, () => {
             console.log("tunnel listening", host, ":", port);
         }).on("connection", (socket: Socket) => {

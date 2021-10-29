@@ -2,7 +2,7 @@ import TServer from "../tunnel/server_raw_socket";
 import ITransmission from "./itransmission";
 import Transmission from "./transmission";
 
-export default class Client extends Transmission implements ITransmission {
+export default class Server extends Transmission implements ITransmission {
     constructor(host:string, port: number, n: number) {
         super(host, port, n);
         this.setPeers(new Array<TServer>());

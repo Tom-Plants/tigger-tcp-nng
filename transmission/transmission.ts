@@ -72,11 +72,7 @@ export default class Transmission implements ITransmission {
                 sendBlocked = true;
             }
         });
-        if(sendBlocked)
-        {
-            return true;
-        }
-        return false;
+        return !sendBlocked;
     }
     onDataRecived(callback: TDataReciveCallback): void {
         this.dataReciveCallbacks.push(callback);
