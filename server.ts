@@ -1,9 +1,11 @@
 import { createConnection, Socket } from "net";
 import Mapper from "./Mapper";
 import Server from "./transmission/server";
+import CServer from "./controller/server";
 
 let mapper: Mapper<Socket>;
 let server: Server;
+let controller: CServer;
 
 let thost: string;
 let tport: number;
@@ -18,9 +20,24 @@ export default function StartServer(
 
     thost = target_host;
     tport = target_port;
+
+    mapper = new Mapper<Socket>();
+
+    controller = new CServer(host, port-1);
+    controller.regCommand("PTSTP", (port: number) => {
+        mapper.getItem(port.toString(), (obj: Socket) => {
+            obj.pause();
+        })
+    });
+    controller.regCommand("PTCTN", (port: number) => {
+        mapper.getItem(port.toString(), (obj: Socket) => {
+            obj.resume();
+        });
+    });
+
     server = new Server(host, port, tunnelN);
     server.onDataRecived(onDataRecive);
-    mapper = new Mapper<Socket>();
+
 }
 
 function onDataRecive(arg: number, data: Buffer) {
@@ -56,22 +73,13 @@ function onDataRecive(arg: number, data: Buffer) {
                 obj.end();
             });
         }
-        else if(cmd == "PTSTP") {
-            mapper.getItem(arg.toString(), (obj: Socket) => {
-                obj.pause();
-            });
-        }else if(cmd == "PTCTN") {
-            mapper.getItem(arg.toString(), (obj:Socket) => {
-                obj.resume();
-            })
-        }
         return;
     }
 
     mapper.getItem(arg.toString(), (obj: Socket) => {
         if(false == obj.write(data)) {
             //console.log("[server => extern]send data with ", arg);
-            server.sendData(Buffer.from("PTSTP"), arg);
+            controller.sendCommand("PTSTP", arg);
         }
     });
 }

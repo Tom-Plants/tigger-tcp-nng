@@ -1,14 +1,28 @@
 import { createServer, Server, Socket } from "net";
 import Mapper from "./Mapper";
 import Client from "./transmission/client";
+import CClient from "./controller/client";
 
 let localServer:Server;
 let mapper: Mapper<Socket>;
 let client: Client;
+let controller: CClient;
 
 export default function StartClient(host: string, port: number, host_listen: string, port_listen: number, tunnelN: number) {
     mapper = new Mapper<Socket>();
     localServer = createLocalServer(port_listen, host_listen);
+
+    controller = new CClient(host, port-1);
+    controller.regCommand("PTSTP", (port: number) => {
+        mapper.getItem(port.toString(), (obj: Socket) => {
+            obj.pause();
+        })
+    });
+    controller.regCommand("PTCTN", (port: number) => {
+        mapper.getItem(port.toString(), (obj: Socket) => {
+            obj.resume();
+        });
+    });
 
     client = new Client(host, port, tunnelN);
     client.onDataRecived(onDataRecive);
@@ -17,6 +31,7 @@ export default function StartClient(host: string, port: number, host_listen: str
             obj?.resume();
         });
     });
+
 }
 
 
@@ -31,22 +46,14 @@ function onDataRecive(arg: number, data: Buffer) {
             mapper.getItem(arg.toString(), (obj: Socket) => {
                 obj.end();
             });
-        }else if(cmd == "PTSTP") {
-            mapper.getItem(arg.toString(), (obj: Socket) => {
-                obj.pause();
-            })
-        }else if(cmd == "PTCTN") {
-            console.log("服务端指示", arg, "继续运行");
-            mapper.getItem(arg.toString(), (obj: Socket) => {
-                obj.resume();
-            });
         }
         return;
     }
     mapper.getItem(arg.toString(), (obj: Socket) => {
         //console.log("[local => extern] GETTING data from ", arg);
         if(false == obj.write(data)) {
-            client.sendData(Buffer.from("PTSTP"), arg);
+            //client.sendData(Buffer.from("PTSTP"), arg);
+            controller.sendCommand("PTSTP", arg);
         }
     });
 }
