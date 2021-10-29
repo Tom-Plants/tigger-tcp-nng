@@ -4,14 +4,14 @@ export default class PacketMixer {
     private tunnelData: Array<Array<Buffer>>;
     private lastePacketPort: number;
     
-    private cb: AnalyzeCallback;
+    private analyzeCallbacks: Array<AnalyzeCallback>;
     
     constructor(tunnelN: number) {
         this.tunnelN = tunnelN;
         this.tunnelData = new Array<Array<Buffer>>();
         this.lastePacketPort = 0;
         for(let i:number=0;i<tunnelN;i++) { this.tunnelData.push(new Array<Buffer>()); }
-        this.cb = () => {};
+        this.analyzeCallbacks = new Array<AnalyzeCallback>();
     }
 
     public input(data: Buffer) {
@@ -19,12 +19,16 @@ export default class PacketMixer {
         this.tunnelData[num].push(data);
         let packet = this.getLastePacket();
         if(packet == undefined) return;
-        this.cb(this.lastePacketPort, packet);
+
+        this.analyzeCallbacks.map((value: AnalyzeCallback) => {
+            if(packet == undefined) return;
+            value(this.lastePacketPort, packet);
+        })
     }
 
     public analyze(cb: (arg:number, data: Buffer) => void)
     {
-        this.cb = cb;
+        this.analyzeCallbacks.push(cb);
     }
 
     private mixPacket(data: Buffer[]): Buffer {

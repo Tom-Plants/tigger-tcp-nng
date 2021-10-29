@@ -1,8 +1,8 @@
 import ITunnel from "./itunnel";
 import {socket, Socket} from "nanomsg";
-import { DataReciveCallback } from "../public/types";
+import { DataReciveCallback, VoidCallBack } from "../public/types";
 
-export default class server implements ITunnel {
+export default class Server implements ITunnel {
     private pair: Socket;
     private dataReciveCallbacks: DataReciveCallback[];
 
@@ -18,6 +18,15 @@ export default class server implements ITunnel {
         this.dataReciveCallbacks = new Array<DataReciveCallback>();
         this.init(host, port);
     }
+    onDrain(callback: VoidCallBack): void {
+    }
+    isDrained(): boolean {
+        return false;
+    }
+    stop(): void {
+    }
+    continue(): void {
+    }
 
     private init(host: string, port: number) {
         this.pair.bind("tcp://" + host + ":" + port.toString());
@@ -28,8 +37,9 @@ export default class server implements ITunnel {
         });
     }
 
-    sendData(data: Buffer): void {
+    sendData(data: Buffer): boolean{
         this.pair.send(data);
+        return true;
     }
     onDataRecived(callback: DataReciveCallback): void {
         this.dataReciveCallbacks.push(callback);

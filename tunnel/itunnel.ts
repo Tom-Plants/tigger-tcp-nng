@@ -1,6 +1,11 @@
-import { DataReciveCallback } from "../public/types";
+import { DataReciveCallback, VoidCallBack } from "../public/types";
 
 export default interface ITunnel{
-    sendData(data: Buffer): void;
+    sendData(data: Buffer): boolean;
     onDataRecived(callback: DataReciveCallback): void;
+    onDrain(callback: VoidCallBack):void;
+    isDrained(): boolean;
+
+    stop(): void;
+    continue(): void;
 }

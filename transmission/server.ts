@@ -1,53 +1,20 @@
-import { TDataReciveCallback } from "../public/types";
+import TServer from "../tunnel/server_raw_socket";
 import ITransmission from "./itransmission";
-import TServer from "../tunnel/server";
-import PacketPatcher from "../packet_handler/packet_patcher";
-import PacketMixer from "../packet_handler/packet_mixer";
+import Transmission from "./transmission";
 
-export default class Server implements ITransmission {
-    private servers: TServer[];
-    private patcher: PacketPatcher;
-    private mixer: PacketMixer;
-    private dataReciveCallbacks: Array<TDataReciveCallback>;
-
-    constructor(host: string, port: number, tunnelN: number) {
-        this.servers = new Array<TServer>();
-        this.patcher = new PacketPatcher(tunnelN);
-        this.mixer = new PacketMixer(tunnelN);
-        this.dataReciveCallbacks = new Array<TDataReciveCallback>();
-        this.openServers(host, port, tunnelN);
-
-        this.mixer.analyze((arg: Number, data: Buffer) => {
-
-            this.dataReciveCallbacks.map((cb: TDataReciveCallback) => {
-                cb(arg.valueOf(), data);
-            });
-        });
+export default class Client extends Transmission implements ITransmission {
+    constructor(host:string, port: number, n: number) {
+        super(host, port, n);
+        this.setPeers(new Array<TServer>());
     }
-
-    private openServers(host: string, port: number, n: number) {
+    openTunnels(host: string, port: number, n: number) {
         let targetPort = 0;
         for(let i:number = 0; i < n; i++) {
             targetPort = port + i;
-            let tServer = new TServer(host, targetPort);
-            this.servers.push(tServer);
-
-            tServer.onDataRecived((data: Buffer) => {
-                this.mixer.input(data);
-            });
+            let tClient = new TServer(host, targetPort);
+            this.getPeers()?.push(tClient);
         }
-    }
 
-    sendData(data: Buffer, sourcePort: number): void {
-        let splitBuffer = this.patcher.patch(data, sourcePort);
-
-        //console.log(">", sourcePort, data);
-        this.servers.map((client: TServer, index: number) => {
-            client.sendData(splitBuffer[index]);
-        });
+        super.openTunnels(host, port, n);
     }
-    onDataRecived(callback: TDataReciveCallback): void {
-        this.dataReciveCallbacks.push(callback);
-    }
-
 }

@@ -7,10 +7,16 @@ let mapper: Mapper<Socket>;
 let client: Client;
 
 export default function StartClient(host: string, port: number, host_listen: string, port_listen: number, tunnelN: number) {
-    client = new Client(host, port, tunnelN);
-    client.onDataRecived(onDataRecive);
     mapper = new Mapper<Socket>();
     localServer = createLocalServer(port_listen, host_listen);
+
+    client = new Client(host, port, tunnelN);
+    client.onDataRecived(onDataRecive);
+    client.onDrain(() => {
+        mapper.foreach((id: string, obj: Socket | undefined) => {
+            obj?.resume();
+        });
+    });
 }
 
 
@@ -67,11 +73,14 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             client.sendData(Buffer.from("CHALF"), parseInt(referPort));
         }).on("data", (data: Buffer) => {
             //console.log("[extern => local]Send Data with", referPort);
-            client.sendData(data, parseInt(referPort));
+            if(client.sendData(data, parseInt(referPort)) == false) {
+                socket.pause();
+            }
         }).on('error', () => {})
         .on('drain', () => {
             client.sendData(Buffer.from("PTCTN"), parseInt(referPort));
         });
+
 
         console.log("新的传入链接", referPort);
         client.sendData(Buffer.from("COPEN"), parseInt(referPort));
