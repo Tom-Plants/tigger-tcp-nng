@@ -18,6 +18,7 @@ export default class RawSocketServer extends Tunnel {
             this.setSocket(socket);
             socket.on("close", () => {
                 this.removeSocket();
+                console.log(port, "has been disconnected");
             })
             .on("error", () => {});
         });
