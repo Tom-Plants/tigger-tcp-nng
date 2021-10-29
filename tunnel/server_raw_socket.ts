@@ -1,5 +1,4 @@
 import { createServer, Socket } from "net";
-import getServer from "./socketcreator";
 import Tunnel from "./tunnel";
 
 export default class RawSocketServer extends Tunnel {
