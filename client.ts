@@ -83,7 +83,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
 
 
         console.log("新的传入链接", referPort);
-        client.sendData(Buffer.from("COPEN"), parseInt(referPort));
+        console.log(client.sendData(Buffer.from("COPEN"), parseInt(referPort)));
         mapper.setItem(socket.remotePort.toString(), socket);
     });
 }

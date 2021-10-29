@@ -24,6 +24,8 @@ export default function StartServer(
 }
 
 function onDataRecive(arg: number, data: Buffer) {
+    console.log("data from client: ", arg, data);
+
     if(data.length == 5) {
         let cmd = data.toString();
         if(cmd == "PTCLS") {
