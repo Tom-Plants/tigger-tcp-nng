@@ -19,6 +19,7 @@ export default function StartClient(host: string, port: number, host_listen: str
         })
     });
     controller.regCommand("PTCTN", (port: number) => {
+        console.log("接收到来自服务器的继续传输请求", port);
         mapper.getItem(port.toString(), (obj: Socket) => {
             obj.resume();
         });
