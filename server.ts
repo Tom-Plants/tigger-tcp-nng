@@ -46,14 +46,14 @@ export default function StartServer(
     });
 
 
-    setInterval(() => {
-        dfConsole.log(">>>>>>", "transmission status,  paused ?:", server.isPaused(), "<<<<<<");
-        mapper.forEach((value: Socket, num: number) => {
-            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
-        });
-        dfConsole.log('-------------------------------------------------------');
-        dfConsole.show();
-    }, 100);
+    //setInterval(() => {
+        //dfConsole.log(">>>>>>", "transmission status,  paused ?:", server.isPaused(), "<<<<<<");
+        //mapper.forEach((value: Socket, num: number) => {
+            //dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
+        //});
+        //dfConsole.log('-------------------------------------------------------');
+        //dfConsole.show();
+    //}, 100);
 }
 
 function onDataRecive(arg: number, data: Buffer) {

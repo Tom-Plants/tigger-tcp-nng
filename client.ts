@@ -32,14 +32,14 @@ export default function StartClient(host: string, port: number, host_listen: str
         });
     });
 
-    setInterval(() => {
-        dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
-        mapper.forEach((value: Socket, num: number) => {
-            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
-        });
-        dfConsole.log('-------------------------------------------------------');
-        dfConsole.show();
-    }, 10);
+    //setInterval(() => {
+        //dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
+        //mapper.forEach((value: Socket, num: number) => {
+            //dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
+        //});
+        //dfConsole.log('-------------------------------------------------------');
+        //dfConsole.show();
+    //}, 10);
 }
 
 
