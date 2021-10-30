@@ -82,7 +82,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             if(client.sendData(data, referPort) == false) {
                 socket.pause();
             }
-        }).on('error', () => {})
+        }).on('error', () => { })
         .on('drain', () => {
             controller.sendCommand("PTCTN", referPort);
         });

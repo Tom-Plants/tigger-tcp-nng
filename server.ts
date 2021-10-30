@@ -65,9 +65,10 @@ function onDataRecive(arg: number, data: Buffer) {
             }).on("data", (data: Buffer) => {
                 server.sendData(data, arg);
             }).on("close", () => {
+                server.sendData(Buffer.from("PTCLS"), arg);
                 mapper.get(arg)?.destroy();
                 mapper.delete(arg);
-            }).on("error", () => {})
+            }).on("error", () => { })
             .on("drain", () => {
                 controller.sendCommand("PTCTN", arg);
             });
