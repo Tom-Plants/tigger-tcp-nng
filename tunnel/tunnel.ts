@@ -28,7 +28,7 @@ export default class Tunnel implements ITunnel {
 
         this.idleBuffer.push(buffer_send);
         this.pushData();
-
+        console.log(this.isDrained());
         return this.isDrained();
     }
     public onDataRecived(callback: DataReciveCallback): void {

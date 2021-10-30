@@ -75,7 +75,6 @@ export default class Transmission implements ITransmission {
         if(this.peers == undefined) throw "the peers is not set";
         for(let i in this.peers) {
             if(!this.peers[i].sendData(splitBuffer[parseInt(i)])) {
-                console.log("节流");
                 sendBlocked = true;
             }
         }
