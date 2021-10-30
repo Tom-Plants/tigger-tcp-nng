@@ -2,34 +2,37 @@ import { createServer, Server, Socket } from "net";
 import Mapper from "./Mapper";
 import Client from "./transmission/client";
 import CClient from "./controller/client";
+import { Duplex, Stream, Writable } from "stream";
+import { Console } from "console";
+import DoubleBufferedConsole from "./console/doublebufferedconsole";
+import { createWriteStream } from "fs";
+import { stdout } from "process";
 
 let localServer:Server;
-let mapper: Mapper<Socket>;
+let mapper: Map<number, Socket>;
 let client: Client;
 let controller: CClient;
+let dfConsole:DoubleBufferedConsole;
 
 export default function StartClient(host: string, port: number, host_listen: string, port_listen: number, tunnelN: number) {
-    mapper = new Mapper<Socket>();
+    dfConsole = new DoubleBufferedConsole();
+
+    mapper = new Map<number, Socket>();
     localServer = createLocalServer(port_listen, host_listen);
 
     controller = new CClient(host, port-1);
     controller.regCommand("PTSTP", (port: number) => {
-        mapper.getItem(port.toString(), (obj: Socket) => {
-            obj.pause();
-        })
+        mapper.get(port)?.pause();
     });
     controller.regCommand("PTCTN", (port: number) => {
-        console.log("接收到来自服务器的继续传输请求", port);
-        mapper.getItem(port.toString(), (obj: Socket) => {
-            obj.resume();
-        });
+        mapper.get(port)?.resume();
     });
 
     client = new Client(host, port, tunnelN);
     client.onDataRecived(onDataRecive);
     client.onDrain(() => {
-        mapper.foreach((id: string, obj: Socket | undefined) => {
-            obj?.resume();
+        mapper.forEach((value: Socket) => {
+            value.resume();
         });
     });
 
@@ -40,23 +43,17 @@ function onDataRecive(arg: number, data: Buffer) {
     if(data.length == 5) {
         let cmd = data.toString();
         if(cmd == "PTCLS") {
-            mapper.removeItem(arg.toString(), (obj: Socket) => {
-                obj.destroy();
-            });
+            mapper.get(arg)?.destroy();
+            mapper.delete(arg);
         }else if(cmd == "SHALF") {
-            mapper.getItem(arg.toString(), (obj: Socket) => {
-                obj.end();
-            });
+            mapper.get(arg)?.end();
         }
         return;
     }
-    mapper.getItem(arg.toString(), (obj: Socket) => {
-        //console.log("[local => extern] GETTING data from ", arg);
-        if(false == obj.write(data)) {
-            //client.sendData(Buffer.from("PTSTP"), arg);
-            controller.sendCommand("PTSTP", arg);
-        }
-    });
+
+    if(false == mapper.get(arg)?.write(data)) {
+        controller.sendCommand("PTSTP", arg);
+    }
 }
 
 function createLocalServer(port_listen: number, host_listen: string): Server {
@@ -64,34 +61,40 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         allowHalfOpen: true,
         pauseOnConnect: true
     }).listen({port: port_listen, hostname: host_listen}, () => {
-        console.log("Client listening ", host_listen, ":", port_listen);
     }).on("connection", (socket: Socket) => {
         if(socket.remotePort == undefined) {
             socket.destroy();
             return;
         }
 
-        let referPort:string = socket.remotePort.toString();
+        let referPort:number = socket.remotePort;
 
         socket.on("close", () => {
-            mapper.removeItem(referPort, (obj: Socket) => {
-                obj.destroy();
-            });
+            client.sendData(Buffer.from("PTCLS"), referPort);
+            mapper.get(referPort)?.destroy();
+            mapper.delete(referPort);
         }).on("end", () => {
-            client.sendData(Buffer.from("CHALF"), parseInt(referPort));
+            client.sendData(Buffer.from("CHALF"), referPort);
         }).on("data", (data: Buffer) => {
-            //console.log("[extern => local]Send Data with", referPort);
-            if(client.sendData(data, parseInt(referPort)) == false) {
+            if(client.sendData(data, referPort) == false) {
                 socket.pause();
             }
         }).on('error', () => {})
         .on('drain', () => {
-            controller.sendCommand("PTCTN", parseInt(referPort));
+            controller.sendCommand("PTCTN", referPort);
         });
 
 
-        console.log("新的传入链接", referPort);
-        console.log(client.sendData(Buffer.from("COPEN"), parseInt(referPort)));
-        mapper.setItem(socket.remotePort.toString(), socket);
+        client.sendData(Buffer.from("COPEN"), referPort);
+        mapper.set(referPort, socket);
     });
 }
+
+setInterval(() => {
+    dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
+    mapper.forEach((value: Socket, num: number) => {
+        dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
+    });
+    dfConsole.log('-------------------------------------------------------');
+    dfConsole.show();
+}, 10);

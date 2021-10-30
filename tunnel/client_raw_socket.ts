@@ -5,10 +5,8 @@ export default class RawSocketClient extends Tunnel {
     constructor(host: string, port: number) {
         super();
 
-        console.log("Tunnel被构造了");
         let client = new Socket();
         client.connect({host, port}, () => {
-            console.log("Tunnel链接成功");
             this.setSocket(client);
         });
 

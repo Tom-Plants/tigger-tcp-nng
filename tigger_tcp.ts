@@ -1,6 +1,8 @@
 import arg from "arg";
 import { ListenOptions, TcpSocketConnectOpts } from "net";
 import StartClient from "./client";
+import Client from "./controller/client";
+import Server from "./controller/server";
 import StartServer from "./server";
 
 try{
@@ -24,12 +26,8 @@ try{
         }else if(args["--type"] == "client")
         {
             //以客户端方式运作
-            //StartClient("45.135.135.142", 8081, "0.0.0.0", 10000, 3);
-            StartClient("localhost", 8081, "0.0.0.0", 10000, 3);
-
-            setInterval(() => {
-                console.log("hello world");
-            }, 1000);
+            StartClient("45.135.135.142", 8080, "0.0.0.0", 10000, 8);
+            //StartClient("", 8081, "0.0.0.0", 10000, 3);
 
         }else
         {

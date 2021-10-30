@@ -30,19 +30,3 @@ export default class PacketPatcher {
         return ap;
     }
 }
-
-let count = 0;
-let a = new PacketMixer(8);
-let b = new PacketPatcher(8);
-
-let aa = Buffer.from("hello");
-
-
-let kk = b.patch(aa, count);
-
-kk.map((value: Buffer) => {
-    a.input(value);
-});
-a.analyze((arg: number, data: Buffer) => {
-    console.log(arg, data);
-});

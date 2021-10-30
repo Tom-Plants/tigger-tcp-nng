@@ -17,8 +17,6 @@ export default class NummedPacketMixer extends PacketMixer {
             let currentPacketNumber = data.readUInt8(0);
             let nextPacketNumber = data.readUInt8(1);
 
-            console.log("<", currentPacketNumber, nextPacketNumber, "this.nextPacketnumber is ", this.nextPacketNumber);
-
             if(this.nextPacketNumber == -1)
             {
                 //init

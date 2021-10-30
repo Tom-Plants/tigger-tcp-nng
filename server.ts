@@ -2,13 +2,16 @@ import { createConnection, Socket } from "net";
 import Mapper from "./Mapper";
 import Server from "./transmission/server";
 import CServer from "./controller/server";
+import DoubleBufferedConsole from "./console/doublebufferedconsole";
 
-let mapper: Mapper<Socket>;
+let mapper: Map<number, Socket>;
 let server: Server;
 let controller: CServer;
 
 let thost: string;
 let tport: number;
+
+let dfConsole: DoubleBufferedConsole;
 
 export default function StartServer(
     host: string,
@@ -18,21 +21,19 @@ export default function StartServer(
     tunnelN: number
     ) {
 
+    dfConsole = new DoubleBufferedConsole();
+
     thost = target_host;
     tport = target_port;
 
-    mapper = new Mapper<Socket>();
+    mapper = new Map<number, Socket>();
 
     controller = new CServer(host, port-1);
     controller.regCommand("PTSTP", (port: number) => {
-        mapper.getItem(port.toString(), (obj: Socket) => {
-            obj.pause();
-        })
+        mapper.get(port)?.pause();
     });
     controller.regCommand("PTCTN", (port: number) => {
-        mapper.getItem(port.toString(), (obj: Socket) => {
-            obj.resume();
-        });
+        mapper.get(port)?.resume();
     });
 
     server = new Server(host, port, tunnelN);
@@ -41,45 +42,45 @@ export default function StartServer(
 }
 
 function onDataRecive(arg: number, data: Buffer) {
-    console.log("data from client: ", arg, data);
 
     if(data.length == 5) {
         let cmd = data.toString();
         if(cmd == "PTCLS") {
-            mapper.removeItem(arg.toString(), (obj: Socket) => {
-                obj.destroy();
-            });
+            mapper.get(arg)?.destroy();
+            mapper.delete(arg);
         }else if(cmd == "COPEN") {
-            console.log("接收到客户端的传入链接", arg);
             let conn = createConnection({host: thost, port: tport}, () => {
                 controller.sendCommand("PTCTN", arg);
             }).on("end", () => {
                 server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
-                //console.log("[extern => server]Send data with", arg);
                 server.sendData(data, arg);
             }).on("close", () => {
-                mapper.removeItem(arg.toString(), (obj: Socket) => {
-                    obj.destroy();
-                });
+                mapper.get(arg)?.destroy();
+                mapper.delete(arg);
             }).on("error", () => {})
             .on("drain", () => {
                 controller.sendCommand("PTCTN", arg);
             });
 
-            mapper.setItem(arg.toString(), conn);
+            mapper.set(arg, conn);
         }else if(cmd == "CHALF") {
-            mapper.getItem(arg.toString(), (obj: Socket) => {
-                obj.end();
-            });
+            mapper.get(arg)?.end();
         }
         return;
     }
 
-    mapper.getItem(arg.toString(), (obj: Socket) => {
-        if(false == obj.write(data)) {
-            //console.log("[server => extern]send data with ", arg);
-            controller.sendCommand("PTSTP", arg);
-        }
-    });
+    if(false == mapper.get(arg)?.write(data))
+    {
+        controller.sendCommand("PTSTP", arg);
+    }
 }
+
+setInterval(() => {
+    dfConsole.log(">>>>>>", "transmission status,  paused ?:", server.isPaused(), "<<<<<<");
+    mapper.forEach((value: Socket, num: number) => {
+        dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
+    });
+    dfConsole.log('-------------------------------------------------------');
+    dfConsole.show();
+}, 100);

@@ -91,5 +91,11 @@ export default class Transmission implements ITransmission {
             value.continue();
         });
     }
-
+    isPaused(): boolean {
+        let paused = false;
+        this.peers?.map((value: ITunnel) => {
+            if(!value.isDrained()) paused = true;
+        });
+        return paused;
+    }
 }
