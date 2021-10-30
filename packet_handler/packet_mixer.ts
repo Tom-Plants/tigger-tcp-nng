@@ -20,10 +20,10 @@ export default class PacketMixer {
         let packet = this.getLastePacket();
         if(packet == undefined) return;
 
-        this.analyzeCallbacks.map((value: AnalyzeCallback) => {
+        for(let i of this.analyzeCallbacks) {
             if(packet == undefined) return;
-            value(this.lastePacketPort, packet);
-        })
+            i(this.lastePacketPort, packet);
+        }
     }
 
     public analyze(cb: (arg:number, data: Buffer) => void)
@@ -56,13 +56,13 @@ export default class PacketMixer {
             if(this.tunnelData[i].length == 0) return undefined;
         }
         let lasteSplitPacket:Array<Buffer> = new Array<Buffer>();
-        this.tunnelData.map((value: Array<Buffer>) => {
-            let item = value.shift();
-            if(item == undefined) return;
+        for(let i of this.tunnelData) {
+            let item = i.shift();
+            if(item == undefined) break;
             this.lastePacketPort = this.readPacketPort(item);
             item = this.clearPacketStatus(item);
             lasteSplitPacket.push(item);
-        });
+        }
         return this.mixPacket(lasteSplitPacket);
     }
 }

@@ -41,9 +41,9 @@ export default class Tunnel implements ITunnel {
             this.pushData();
             if(this.isDrained())
             {
-                this.drainCallbacks.map((callback: VoidCallBack) => {
+                for(let callback of this.drainCallbacks) {
                     callback();
-                });
+                }
             }
         }).on("data", (data: Buffer) => {
             this.handleData(data);
@@ -101,9 +101,9 @@ export default class Tunnel implements ITunnel {
             if(packet_length == d1.length - 4)
             {
                 this.reciveBuffer = null;
-                this.reciveCallbacks.map((value: DataReciveCallback) => {
+                for(let value of this.reciveCallbacks) {
                     value(d1.slice(4, d1.length));
-                });
+                }
                 break;
             }else {
                 if(packet_length > d1.length - 4) //没接收完
@@ -117,9 +117,9 @@ export default class Tunnel implements ITunnel {
                     let left = d1.slice(4, packet_length + 4);
                     let right = d1.slice(packet_length + 4, d1.length);
 
-                    this.reciveCallbacks.map((value: DataReciveCallback) => {
+                    for(let value of this.reciveCallbacks) {
                         value(left);
-                    });
+                    }
                     this.reciveBuffer = right;
                     d1 = right;
                 }

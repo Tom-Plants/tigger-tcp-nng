@@ -27,9 +27,9 @@ export default class Transmission implements ITransmission {
         this.tunnelN = tunnelN;
 
         this.mixer.analyze((arg: Number, data: Buffer) => {
-            this.dataReciveCallbacks.map((cb: TDataReciveCallback) => {
-                cb(arg.valueOf(), data);
-            });
+            for(let i of this.dataReciveCallbacks) {
+                i(arg.valueOf(), data);
+            }
         });
     }
 
@@ -43,23 +43,28 @@ export default class Transmission implements ITransmission {
     }
 
     openTunnels(host: string, port: number, tunnelN: number) {
-        this.peers?.map((value: ITunnel) => {
+        if(this.peers == undefined) return;
+        for(let value of this.peers) {
             value.onDataRecived((data: Buffer) => {
                 this.mixer.input(data);
             });
             value.onDrain(() => {
                 let stoped:boolean = false;
-                this.peers?.map((value: ITunnel ) => {
-                    if(!value.isDrained()) {
+                if(this.peers == undefined) return;
+                for(let i of this.peers)
+                {
+                    if(!i.isDrained()) {
                         stoped = true;
                     }
-                });
+
+                }
                 if(stoped) return;
-                this.drainCallbacks.map((value: VoidCallBack) => {
-                    value();
-                });
+                for(let i of this.drainCallbacks) {
+                    i();
+                }
             });
-        });
+        }
+        
     }
 
 
@@ -67,11 +72,12 @@ export default class Transmission implements ITransmission {
         let splitBuffer = this.patcher.patch(data, sourcePort);
         let sendBlocked = false;
         //console.log(">", sourcePort, data);
-        this.peers?.map((client: ITunnel, index: number) => {
-            if(!client.sendData(splitBuffer[index])) {
+        if(this.peers == undefined) throw "the peers is not set";
+        for(let i in this.peers) {
+            if(!this.peers[i].sendData(splitBuffer[parseInt(i)])) {
                 sendBlocked = true;
             }
-        });
+        }
         return !sendBlocked;
     }
     onDataRecived(callback: TDataReciveCallback): void {
@@ -83,9 +89,10 @@ export default class Transmission implements ITransmission {
 
     isPaused(): boolean {
         let paused = false;
-        this.peers?.map((value: ITunnel) => {
+        if(this.peers == undefined) throw "the peers is not set";
+        for(let value of this.peers) {
             if(!value.isDrained()) paused = true;
-        });
+        }
         return paused;
     }
 }

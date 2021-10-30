@@ -11,9 +11,11 @@ export default class Server extends RawSocketServer {
             let cmd = data.slice(0, 5).toString();
             let port = data.readUInt16LE(5);
             let r = this.mapper.get(cmd);
-            r?.map((value: CommandCallBack) => {
-                value(port);
-            });
+            if(r != undefined) {
+                for(let i of r) {
+                    i(port);
+                }
+            }
         });
     }
 

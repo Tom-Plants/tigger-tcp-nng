@@ -50,9 +50,9 @@ export default class NummedPacketMixer extends PacketMixer {
     }
 
     private callDataReciveCallbacks(arg:Number, data: Buffer) {
-        this.dataReciveCallbacks.map((value: RDataReciveCallback) => {
-            value(arg, data);
-        });
+        for(let i of this.dataReciveCallbacks) {
+            i(arg, data);
+        }
     }
 
     onNummedPacketRecived(callback: RDataReciveCallback): void {
