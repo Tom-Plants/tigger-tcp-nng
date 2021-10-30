@@ -9,14 +9,12 @@ export default class Tunnel implements ITunnel {
     private reciveBuffer: Buffer | null | undefined;
     private reciveCallbacks: Array<DataReciveCallback>;
     private drainCallbacks: Array<VoidCallBack>;
-    private blocked: boolean;
 
 
     constructor() {
         this.idleBuffer = new Array<Buffer>();
         this.reciveCallbacks = new Array<DataReciveCallback>();
         this.drainCallbacks = new Array<VoidCallBack>();
-        this.blocked = true;
     }
     public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);
@@ -29,8 +27,7 @@ export default class Tunnel implements ITunnel {
         let buffer_send = Buffer.concat([length_buffer, data]);
 
         this.idleBuffer.push(buffer_send);
-        this.pushData();
-        return this.isDrained();
+        return this.pushData();
     }
     public onDataRecived(callback: DataReciveCallback): void {
         this.reciveCallbacks.push(callback);
@@ -39,10 +36,7 @@ export default class Tunnel implements ITunnel {
     protected setSocket(socket: Socket) {
         this.socket = socket;
         socket.on("drain", () => {
-            this.pushData();
-            if(this.isDrained())
-            {
-                this.blocked = false;
+            if(this.pushData()) {
                 for(let callback of this.drainCallbacks) {
                     callback();
                 }
@@ -51,7 +45,6 @@ export default class Tunnel implements ITunnel {
             this.handleData(data);
         });
 
-        this.blocked = false;
         socket.setKeepAlive(true, 1000);
     }
     protected removeSocket() {
@@ -63,25 +56,18 @@ export default class Tunnel implements ITunnel {
         return true;
     }
 
-    private pushData() {
-        if(this.socket == undefined){
-            this.blocked = true;
-            return;
-        }
+    private pushData(): boolean {
+        if(this.socket == undefined) return false;
         while(true) {
             let data:Buffer | undefined = this.idleBuffer.shift();
-            if(data == undefined) break;
-            if(this.socket.write(data) == false) {
-                this.blocked = true;
-                break;
-            }
+            if(data == undefined) return true;
+            if(this.socket.write(data) == false) return false;
             continue;
         }
     }
 
     public isDrained():boolean {
-        if(this.socket == undefined) return (this.idleBuffer.length == 0);
-        return (this.idleBuffer.length == 0) && (!this.blocked)
+        return (this.idleBuffer.length == 0);
     }
 
     
