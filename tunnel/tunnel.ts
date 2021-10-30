@@ -46,7 +46,7 @@ export default class Tunnel implements ITunnel {
             }
         }).on("data", (data: Buffer) => {
             this.handleData(data);
-        }).on("error", () => {});
+        });
     }
     protected removeSocket() {
         this.socket?.destroy();
