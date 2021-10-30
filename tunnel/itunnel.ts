@@ -6,6 +6,4 @@ export default interface ITunnel{
     onDrain(callback: VoidCallBack):void;
     isDrained(): boolean;
 
-    stop(): void;
-    continue(): void;
 }

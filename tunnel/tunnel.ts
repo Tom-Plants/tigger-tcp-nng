@@ -27,8 +27,9 @@ export default class Tunnel implements ITunnel {
         let buffer_send = Buffer.concat([length_buffer, data]);
 
         this.idleBuffer.push(buffer_send);
+        this.pushData();
 
-        return this.pushData();
+        return this.isDrained();
     }
     public onDataRecived(callback: DataReciveCallback): void {
         this.reciveCallbacks.push(callback);
@@ -37,12 +38,12 @@ export default class Tunnel implements ITunnel {
     protected setSocket(socket: Socket) {
         this.socket = socket;
         socket.on("drain", () => {
-            if(this.pushData()) {
-                this.drainCallbacks.map((value: VoidCallBack) => {
-                    value();
+            this.pushData();
+            if(this.isDrained())
+            {
+                this.drainCallbacks.map((callback: VoidCallBack) => {
+                    callback();
                 });
-            }else {
-                socket.emit("drain");
             }
         }).on("data", (data: Buffer) => {
             this.handleData(data);
@@ -60,11 +61,11 @@ export default class Tunnel implements ITunnel {
     }
 
     private pushData() {
-        if(this.socket == undefined) return false;
+        if(this.socket == undefined) return;
         while(true) {
             let data:Buffer | undefined = this.idleBuffer.shift();
-            if(data == undefined) return true;
-            if(this.socket.write(data) == false) return false;
+            if(data != undefined && this.socket.write(data) == true) continue;
+            break;
         }
     }
 
@@ -72,13 +73,6 @@ export default class Tunnel implements ITunnel {
         return this.idleBuffer.length == 0;
     }
 
-    public stop(): void {
-        this.socket?.pause();
-    }
-
-    public continue(): void {
-        this.socket?.resume();
-    }
     
     /**
      * 处理粘包分包
