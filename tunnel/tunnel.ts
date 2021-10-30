@@ -30,6 +30,7 @@ export default class Tunnel implements ITunnel {
 
         this.idleBuffer.push(buffer_send);
         this.pushData();
+        if(this.isDrained()) console.log("需要节流");
         return this.isDrained();
     }
     public onDataRecived(callback: DataReciveCallback): void {
@@ -72,7 +73,6 @@ export default class Tunnel implements ITunnel {
             let data:Buffer | undefined = this.idleBuffer.shift();
             if(data == undefined) break;
             if(this.socket.write(data) == false) {
-                console.log("需要节流!");
                 this.blocked = true;
                 break;
             }
