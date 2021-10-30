@@ -16,7 +16,7 @@ export default class Tunnel implements ITunnel {
         this.idleBuffer = new Array<Buffer>();
         this.reciveCallbacks = new Array<DataReciveCallback>();
         this.drainCallbacks = new Array<VoidCallBack>();
-        this.blocked = false;
+        this.blocked = true;
     }
     public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);
@@ -51,6 +51,7 @@ export default class Tunnel implements ITunnel {
             this.handleData(data);
         });
 
+        this.blocked = false;
         socket.setKeepAlive(true, 1000);
     }
     protected removeSocket() {
