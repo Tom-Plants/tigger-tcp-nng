@@ -38,6 +38,11 @@ export default function StartServer(
 
     server = new Server(host, port, tunnelN);
     server.onDataRecived(onDataRecive);
+    server.onDrain(() => {
+        mapper.forEach((value: Socket) => {
+            value.resume();
+        });
+    });
 
 
     setInterval(() => {
@@ -63,7 +68,9 @@ function onDataRecive(arg: number, data: Buffer) {
             }).on("end", () => {
                 server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
-                server.sendData(data, arg);
+                if(false == server.sendData(data, arg)) {
+                    conn.pause();
+                }
             }).on("close", () => {
                 server.sendData(Buffer.from("PTCLS"), arg);
                 mapper.get(arg)?.destroy();
