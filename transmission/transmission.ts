@@ -81,16 +81,6 @@ export default class Transmission implements ITransmission {
         this.drainCallbacks.push(callback);
     }
 
-    stop(): void {
-        this.peers?.map((value: ITunnel) => {
-            value.stop();
-        });
-    }
-    continue(): void {
-        this.peers?.map((value: ITunnel) => {
-            value.continue();
-        });
-    }
     isPaused(): boolean {
         let paused = false;
         this.peers?.map((value: ITunnel) => {
