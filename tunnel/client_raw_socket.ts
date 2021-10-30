@@ -13,9 +13,6 @@ export default class RawSocketClient extends Tunnel {
         client.on("close", () => {
             this.removeSocket();
             client.connect({host, port});
-        }).on("timeout", () => {
-            this.removeSocket();
-            client.connect({host, port});
         }).on("error", () => {});
     }
 }

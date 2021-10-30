@@ -18,9 +18,6 @@ export default class RawSocketServer extends Tunnel {
             socket.on("close", () => {
                 this.removeSocket();
                 console.log(port, "has been disconnected");
-            }).on("timeout", () => {
-                this.removeSocket();
-                console.log(port, 'has been timeout');
             }).on("error", () => {});
         });
     }
