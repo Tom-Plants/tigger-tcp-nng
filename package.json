@@ -14,11 +14,9 @@
   "author": "Assembly",
   "license": "ISC",
   "dependencies": {
-    "arg": "^5.0.1",
-    "nanomsg": "^4.1.0"
+    "arg": "^5.0.1"
   },
   "devDependencies": {
-    "@types/nanomsg": "^3.2.3",
     "@types/node": "^16.11.6",
     "typescript": "^4.4.4"
   }

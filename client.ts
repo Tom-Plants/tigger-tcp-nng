@@ -34,7 +34,7 @@ export default function StartClient(host: string, port: number, host_listen: str
     setInterval(() => {
         dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
         mapper.forEach((value: Socket, num: number) => {
-            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
+            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
         });
         dfConsole.log('-------------------------------------------------------');
         dfConsole.show();
