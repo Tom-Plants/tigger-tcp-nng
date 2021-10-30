@@ -26,7 +26,6 @@ export default function StartClient(host: string, port: number, host_listen: str
     client = new Client(host, port, tunnelN);
     client.onDataRecived(onDataRecive);
     client.onDrain(() => {
-        console.log("client >> tunnel continued");
         mapper.forEach((value: Socket) => {
             value.resume();
         });
@@ -81,7 +80,6 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             client.sendData(Buffer.from("CHALF"), referPort);
         }).on("data", (data: Buffer) => {
             if(client.sendData(data, referPort) == false) {
-                console.log(referPort, "client >> tunnel paused");
                 socket.pause();
             }
         }).on('error', () => { })

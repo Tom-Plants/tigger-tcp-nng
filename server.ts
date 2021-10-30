@@ -39,7 +39,6 @@ export default function StartServer(
     server = new Server(host, port, tunnelN);
     server.onDataRecived(onDataRecive);
     server.onDrain(() => {
-        console.log("server >> tunnel continued");
         mapper.forEach((value: Socket) => {
             value.resume();
         });
@@ -70,7 +69,6 @@ function onDataRecive(arg: number, data: Buffer) {
                 server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
                 if(false == server.sendData(data, arg)) {
-                    console.log(arg, "server >> tunnel paused");
                     conn.pause();
                 }
             }).on("close", () => {
