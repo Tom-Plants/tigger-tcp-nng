@@ -64,13 +64,15 @@ export default class Tunnel implements ITunnel {
         if(this.socket == undefined) return;
         while(true) {
             let data:Buffer | undefined = this.idleBuffer.shift();
-            if(data != undefined && this.socket.write(data) == true) continue;
+            if(data == undefined) break;
+            if(this.socket.write(data) == true) continue;
             break;
         }
     }
 
     public isDrained():boolean {
-        return this.idleBuffer.length == 0;
+        if(this.socket == undefined) return (this.idleBuffer.length == 0);
+        return (this.idleBuffer.length == 0) && (!this.socket.isPaused())
     }
 
     
