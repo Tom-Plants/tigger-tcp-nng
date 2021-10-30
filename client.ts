@@ -1,12 +1,7 @@
 import { createServer, Server, Socket } from "net";
-import Mapper from "./Mapper";
 import Client from "./transmission/client";
 import CClient from "./controller/client";
-import { Duplex, Stream, Writable } from "stream";
-import { Console } from "console";
 import DoubleBufferedConsole from "./console/doublebufferedconsole";
-import { createWriteStream } from "fs";
-import { stdout } from "process";
 
 let localServer:Server;
 let mapper: Map<number, Socket>;
@@ -36,6 +31,14 @@ export default function StartClient(host: string, port: number, host_listen: str
         });
     });
 
+    setInterval(() => {
+        dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
+        mapper.forEach((value: Socket, num: number) => {
+            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
+        });
+        dfConsole.log('-------------------------------------------------------');
+        dfConsole.show();
+    }, 10);
 }
 
 
@@ -89,12 +92,3 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         mapper.set(referPort, socket);
     });
 }
-
-setInterval(() => {
-    dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
-    mapper.forEach((value: Socket, num: number) => {
-        dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
-    });
-    dfConsole.log('-------------------------------------------------------');
-    dfConsole.show();
-}, 10);

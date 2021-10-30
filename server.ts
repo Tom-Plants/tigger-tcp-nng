@@ -39,6 +39,15 @@ export default function StartServer(
     server = new Server(host, port, tunnelN);
     server.onDataRecived(onDataRecive);
 
+
+    setInterval(() => {
+        dfConsole.log(">>>>>>", "transmission status,  paused ?:", server.isPaused(), "<<<<<<");
+        mapper.forEach((value: Socket, num: number) => {
+            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
+        });
+        dfConsole.log('-------------------------------------------------------');
+        dfConsole.show();
+    }, 100);
 }
 
 function onDataRecive(arg: number, data: Buffer) {
@@ -75,12 +84,3 @@ function onDataRecive(arg: number, data: Buffer) {
         controller.sendCommand("PTSTP", arg);
     }
 }
-
-setInterval(() => {
-    dfConsole.log(">>>>>>", "transmission status,  paused ?:", server.isPaused(), "<<<<<<");
-    mapper.forEach((value: Socket, num: number) => {
-        dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesRead, download: value.bytesWritten}, "<<<<<<");
-    });
-    dfConsole.log('-------------------------------------------------------');
-    dfConsole.show();
-}, 100);
