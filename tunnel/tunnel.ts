@@ -9,12 +9,14 @@ export default class Tunnel implements ITunnel {
     private reciveBuffer: Buffer | null | undefined;
     private reciveCallbacks: Array<DataReciveCallback>;
     private drainCallbacks: Array<VoidCallBack>;
+    private blocked: boolean;
 
 
     constructor() {
         this.idleBuffer = new Array<Buffer>();
         this.reciveCallbacks = new Array<DataReciveCallback>();
         this.drainCallbacks = new Array<VoidCallBack>();
+        this.blocked = false;
     }
     public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);
@@ -28,7 +30,7 @@ export default class Tunnel implements ITunnel {
 
         this.idleBuffer.push(buffer_send);
         this.pushData();
-        if(!this.isDrained()) console.log(Date.now, "节流");
+        if(!this.isDrained()) console.log("需要节流");
         return this.isDrained();
     }
     public onDataRecived(callback: DataReciveCallback): void {
@@ -41,6 +43,7 @@ export default class Tunnel implements ITunnel {
             this.pushData();
             if(this.isDrained())
             {
+                this.blocked = false;
                 for(let callback of this.drainCallbacks) {
                     callback();
                 }
@@ -61,18 +64,24 @@ export default class Tunnel implements ITunnel {
     }
 
     private pushData() {
-        if(this.socket == undefined) return;
+        if(this.socket == undefined){
+            this.blocked = true;
+            return;
+        }
         while(true) {
             let data:Buffer | undefined = this.idleBuffer.shift();
             if(data == undefined) break;
-            if(this.socket.write(data) == true) continue;
-            break;
+            if(this.socket.write(data) == false) {
+                this.blocked = true;
+                break;
+            }
+            continue;
         }
     }
 
     public isDrained():boolean {
         if(this.socket == undefined) return (this.idleBuffer.length == 0);
-        return (this.idleBuffer.length == 0) && (!this.socket.isPaused())
+        return (this.idleBuffer.length == 0) && (!this.blocked)
     }
 
     
