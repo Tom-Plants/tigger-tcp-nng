@@ -61,8 +61,7 @@ function onDataRecive(arg: number, data: Buffer) {
 
 function createLocalServer(port_listen: number, host_listen: string): Server {
     return createServer({
-        allowHalfOpen: true,
-        pauseOnConnect: true
+        allowHalfOpen: true
     }).listen({port: port_listen, hostname: host_listen}, () => {
     }).on("connection", (socket: Socket) => {
         if(socket.remotePort == undefined) {
