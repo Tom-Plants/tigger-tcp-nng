@@ -78,7 +78,7 @@ function onDataRecive(arg: number, data: Buffer) {
             }).on("error", () => { })
             .on("drain", () => {
                 controller.sendCommand("PTCTN", arg);
-            });
+            }).setKeepAlive(true, 200);
 
             mapper.set(arg, conn);
         }else if(cmd == "CHALF") {

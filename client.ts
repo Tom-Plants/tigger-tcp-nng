@@ -85,7 +85,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
         }).on('error', () => { })
         .on('drain', () => {
             controller.sendCommand("PTCTN", referPort);
-        });
+        }).setKeepAlive(true, 200);
 
 
         client.sendData(Buffer.from("COPEN"), referPort);
