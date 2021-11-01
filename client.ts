@@ -1,13 +1,17 @@
 import { createServer, Server, Socket } from "net";
 import Client from "./transmission/client";
+import FClient, { IdleData } from "./transmission/fake_client";
 import CClient from "./controller/client";
 import DoubleBufferedConsole from "./console/doublebufferedconsole";
+import ITransmission from "./transmission/itransmission";
 
 let localServer:Server;
 let mapper: Map<number, Socket>;
-let client: Client;
+let client: ITransmission;
 let controller: CClient;
 let dfConsole:DoubleBufferedConsole;
+let real_client: Client;
+let fake_client: FClient;
 
 export default function StartClient(host: string, port: number, host_listen: string, port_listen: number, tunnelN: number) {
     dfConsole = new DoubleBufferedConsole();
@@ -23,13 +27,29 @@ export default function StartClient(host: string, port: number, host_listen: str
         mapper.get(port)?.resume();
     });
 
-    client = new Client(host, port, tunnelN);
-    client.onDataRecived(onDataRecive);
-    client.onDrain(() => {
+    real_client = new Client(host, port, tunnelN);
+    fake_client = new FClient(host, port, tunnelN);
+
+    real_client.onDataRecived(onDataRecive);
+    real_client.onDrain(() => {
         mapper.forEach((value: Socket) => {
             value.resume();
         });
     });
+    real_client.onReady(() => {
+        client = real_client;
+        let idlePacket: IdleData | undefined;
+        while(undefined != (idlePacket = fake_client.getIdleData().shift()))
+        {
+            client.sendData(idlePacket.d, idlePacket.p);
+        }
+    });
+    real_client.onReconnecting(() => {
+    });
+
+    client = fake_client;
+
+
 
     setInterval(() => {
         dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");

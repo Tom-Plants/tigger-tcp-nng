@@ -5,5 +5,7 @@ export default interface ITunnel{
     onDataRecived(callback: DataReciveCallback): void;
     onDrain(callback: VoidCallBack):void;
     isDrained(): boolean;
-
+    onReady(callback: VoidCallBack): void;
+    onReconnecting(callback: VoidCallBack): void;
+    connected(): boolean;
 }

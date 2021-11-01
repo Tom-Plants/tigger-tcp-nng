@@ -9,12 +9,27 @@ export default class Tunnel implements ITunnel {
     private reciveBuffer: Buffer | null | undefined;
     private reciveCallbacks: Array<DataReciveCallback>;
     private drainCallbacks: Array<VoidCallBack>;
+    protected readyCallbacks: Array<VoidCallBack>;
+    protected reconnectingCallbacks: Array<VoidCallBack>;
+    protected _connected: boolean;
 
 
     constructor() {
         this.idleBuffer = new Array<Buffer>();
         this.reciveCallbacks = new Array<DataReciveCallback>();
         this.drainCallbacks = new Array<VoidCallBack>();
+        this.readyCallbacks = new Array<VoidCallBack>();
+        this.reconnectingCallbacks = new Array<VoidCallBack>();
+        this._connected = false;
+    }
+    connected(): boolean {
+        return this._connected;
+    }
+    onReady(callback: VoidCallBack): void {
+        this.readyCallbacks.push(callback);
+    }
+    onReconnecting(callback: VoidCallBack): void {
+        this.reconnectingCallbacks.push(callback);
     }
     public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);

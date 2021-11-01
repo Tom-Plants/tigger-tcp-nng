@@ -9,11 +9,21 @@ export default class Transmission implements ITransmission {
     private patcher: PacketPatcher;
     private mixer: PacketMixer;
     private drainCallbacks: Array<VoidCallBack>;
-    private dataReciveCallbacks: Array<TDataReciveCallback>;
+    protected dataReciveCallbacks: Array<TDataReciveCallback>;
+
+    private reconnectingCallbacks: Array<VoidCallBack>;
+    private readyCallbacks: Array<VoidCallBack>;
 
     private host: string;
     private port: number;
     private tunnelN: number;
+
+    /**
+     * status == 0: init;
+     * status == 1: connecting;
+     * status == 2: ready;
+     */
+    private status: number;
 
     constructor(host: string, port: number, tunnelN: number)
     {
@@ -21,16 +31,26 @@ export default class Transmission implements ITransmission {
         this.mixer = new PacketMixer(tunnelN);
         this.dataReciveCallbacks = new Array<TDataReciveCallback>();
         this.drainCallbacks = new Array<VoidCallBack>();
+        this.reconnectingCallbacks = new Array<VoidCallBack>();
+        this.readyCallbacks = new Array<VoidCallBack>();
 
         this.host = host;
         this.port = port;
         this.tunnelN = tunnelN;
+        this.status = 0;
 
         this.mixer.analyze((arg: Number, data: Buffer) => {
             for(let i of this.dataReciveCallbacks) {
                 i(arg.valueOf(), data);
             }
         });
+    }
+
+    onReconnecting(callback: VoidCallBack): void {
+        this.reconnectingCallbacks.push(callback);
+    }
+    onReady(callback: VoidCallBack): void {
+        this.readyCallbacks.push(callback);
     }
 
     protected setPeers(peers: Array<ITunnel>) {
@@ -61,6 +81,30 @@ export default class Transmission implements ITransmission {
                 if(stoped) return;
                 for(let i of this.drainCallbacks) {
                     i();
+                }
+            });
+            value.onReady(() => {
+                let allReady = true;
+                if(this.peers == undefined) return;
+                for(let i of this.peers) {
+                    if(!i.connected()) {
+                        allReady = false;
+                        break;
+                    }
+                }
+                if(allReady) {
+                    this.status = 2;
+                    for(let j of this.readyCallbacks) {
+                        j();
+                    }
+                }
+            });
+            value.onReconnecting(() => {
+                if(this.status == 2) {
+                    this.status = 1;
+                    for(let i of this.reconnectingCallbacks) {
+                        i();
+                    }
                 }
             });
         }
