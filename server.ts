@@ -6,7 +6,6 @@ import DoubleBufferedConsole from "./console/doublebufferedconsole";
 
 let mapper: Map<number, Socket>;
 let server: Server;
-let controller: CServer;
 
 let thost: string;
 let tport: number;
@@ -27,14 +26,6 @@ export default function StartServer(
     tport = target_port;
 
     mapper = new Map<number, Socket>();
-
-    controller = new CServer(host, port-1);
-    controller.regCommand("PTSTP", (port: number) => {
-        mapper.get(port)?.pause();
-    });
-    controller.regCommand("PTCTN", (port: number) => {
-        mapper.get(port)?.resume();
-    });
 
     server = new Server(host, port, tunnelN);
     server.onDataRecived(onDataRecive);
@@ -64,7 +55,7 @@ function onDataRecive(arg: number, data: Buffer) {
             mapper.delete(arg);
         }else if(cmd == "COPEN") {
             let conn = createConnection({host: thost, port: tport}, () => {
-                controller.sendCommand("PTCTN", arg);
+                server.sendData(Buffer.from("PTCTN"), arg);
             }).on("end", () => {
                 server.sendData(Buffer.from("SHALF"), arg);
             }).on("data", (data: Buffer) => {
@@ -77,18 +68,22 @@ function onDataRecive(arg: number, data: Buffer) {
                 mapper.delete(arg);
             }).on("error", () => { })
             .on("drain", () => {
-                controller.sendCommand("PTCTN", arg);
+                server.sendData(Buffer.from("PTCTN"), arg);
             }).setKeepAlive(true, 200);
 
             mapper.set(arg, conn);
         }else if(cmd == "CHALF") {
             mapper.get(arg)?.end();
+        }else if(cmd == "PTCTN") {
+            mapper.get(arg)?.resume();
+        }else if(cmd == "PTSTP") {
+            mapper.get(arg)?.pause();
         }
         return;
     }
 
     if(false == mapper.get(arg)?.write(data))
     {
-        controller.sendCommand("PTSTP", arg);
+        server.sendData(Buffer.from("PTSTP"), arg)
     }
 }

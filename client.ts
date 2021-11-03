@@ -5,10 +5,8 @@ import CClient from "./controller/client";
 import DoubleBufferedConsole from "./console/doublebufferedconsole";
 import ITransmission from "./transmission/itransmission";
 
-let localServer:Server;
 let mapper: Map<number, Socket>;
 let client: ITransmission;
-let controller: CClient;
 let dfConsole:DoubleBufferedConsole;
 let real_client: Client;
 let fake_client: FClient;
@@ -17,20 +15,18 @@ export default function StartClient(host: string, port: number, host_listen: str
     dfConsole = new DoubleBufferedConsole();
 
     mapper = new Map<number, Socket>();
-    localServer = createLocalServer(port_listen, host_listen);
-
-    controller = new CClient(host, port-1);
-    controller.regCommand("PTSTP", (port: number) => {
-        mapper.get(port)?.pause();
-    });
-    controller.regCommand("PTCTN", (port: number) => {
-        mapper.get(port)?.resume();
-    });
+    createLocalServer(port_listen, host_listen);
 
     real_client = new Client(host, port, tunnelN);
     fake_client = new FClient(host, port, tunnelN);
 
     real_client.onDataRecived(onDataRecive);
+    fake_client.onDataRecived(onDataRecive);
+    fake_client.regLifeCheck(() => {
+        mapper.forEach((value: Socket) => {
+            value.resume();
+        });
+    });
     real_client.onDrain(() => {
         mapper.forEach((value: Socket) => {
             value.resume();
@@ -43,8 +39,11 @@ export default function StartClient(host: string, port: number, host_listen: str
         {
             client.sendData(idlePacket.d, idlePacket.p);
         }
+        fake_client.stopLifeCheck();
     });
     real_client.onReconnecting(() => {
+        fake_client.startLifeCheck();
+        client = fake_client;
     });
 
     client = fake_client;
@@ -58,7 +57,7 @@ export default function StartClient(host: string, port: number, host_listen: str
         });
         dfConsole.log('-------------------------------------------------------');
         dfConsole.show();
-    }, 10);
+    }, 100);
 }
 
 
@@ -70,20 +69,23 @@ function onDataRecive(arg: number, data: Buffer) {
             mapper.delete(arg);
         }else if(cmd == "SHALF") {
             mapper.get(arg)?.end();
+        }else if(cmd == "PTCTN") {
+            mapper.get(arg)?.resume();
+        }else if(cmd == "PTSTP") {
+            mapper.get(arg)?.pause();
         }
         return;
     }
 
     if(false == mapper.get(arg)?.write(data)) {
-        controller.sendCommand("PTSTP", arg);
+        client.sendData(Buffer.from("PTSTP"), arg);
     }
 }
 
 function createLocalServer(port_listen: number, host_listen: string): Server {
     return createServer({
         allowHalfOpen: true
-    }).listen({port: port_listen, hostname: host_listen}, () => {
-    }).on("connection", (socket: Socket) => {
+    }, (socket: Socket) => {
         if(socket.remotePort == undefined) {
             socket.destroy();
             return;
@@ -96,22 +98,18 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             mapper.get(referPort)?.destroy();
             mapper.delete(referPort);
         }).on("end", () => {
+            console.log("CHALF", referPort);
             client.sendData(Buffer.from("CHALF"), referPort);
         }).on("data", (data: Buffer) => {
             if(client.sendData(data, referPort) == false) {
                 socket.pause();
             }
-        }).on('error', () => { })
+        }).on('error', () => {})
         .on('drain', () => {
-            controller.sendCommand("PTCTN", referPort);
-        }).setKeepAlive(true, 200)
-        .setTimeout(5000)
-        .on("timeout", () => {
-            socket.resume();
-        });
-
+            client.sendData(Buffer.from("PTCTN"), referPort);
+        }).setKeepAlive(true, 200);
 
         client.sendData(Buffer.from("COPEN"), referPort);
         mapper.set(referPort, socket);
-    });
+    }).listen({port: port_listen, host: host_listen});
 }

@@ -1,9 +1,36 @@
-import Client from "./transmission/client";
-let count = 0;
+import { createServer, Server, Socket } from "net";
 
-let client = new Client("45.135.135.142", 12345, 2);
-
-for(;count < 100; count++) {
-    console.log(count);
-    client.sendData(Buffer.alloc(1024*100), 1000);
+createLocalServer(10000, "0.0.0.0");
+function createLocalServer(port_listen: number, host_listen: string): Server {
+    return createServer({
+        allowHalfOpen: true
+    }, (socket: Socket) => {
+        if(socket.remotePort == undefined) {
+            socket.destroy();
+            return;
+        }
+        let referPort:number = socket.remotePort;
+        socket.on("close", () => {
+            let k:any = socket;
+            console.log("socket stopped", referPort);
+            socket.destroy();
+        });
+        console.log(referPort, "opened");
+        socket.on("end", () => {
+            console.log("CHALF", referPort);
+            socket.end();
+        });
+        socket.on("data", (data: Buffer) => {
+            console.log(socket.remotePort, "被暂停了");
+            socket.pause();
+            setTimeout(() => {
+                console.log(socket.remotePort, "被恢复了");
+                socket.resume();
+            }, 1000);
+        });
+        socket.on('error', (errr) => {console.log(errr);})
+        socket.on('drain', () => {
+        })
+        socket.setKeepAlive(true, 200);
+    }).listen({port: port_listen, host: host_listen});
 }
