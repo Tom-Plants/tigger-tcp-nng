@@ -110,7 +110,7 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             client.sendData(Buffer.from("PTCTN"), referPort);
         }).setKeepAlive(true, 200);
 
-        client.sendData(Buffer.from("COPEN"), referPort);
         mapper.set(referPort, socket);
+        client.sendData(Buffer.from("COPEN"), referPort);
     }).listen({port: port_listen, host: host_listen});
 }

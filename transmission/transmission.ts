@@ -114,7 +114,7 @@ export default class Transmission implements ITransmission {
                 if(this.peers == undefined) return;
                 for(let i of this.peers)
                 {
-                    if(!i.isBlocked()) {
+                    if(i.isBlocked()) {
                         stoped = true;
                     }
                 }

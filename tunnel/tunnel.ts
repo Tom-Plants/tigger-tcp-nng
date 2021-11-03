@@ -27,7 +27,7 @@ export default class Tunnel implements ITunnel {
      * 释放Tunnel占用的一些资源，并且断开连接
      */
     public destroy(): void {
-        this.socket?.destroy();
+        this.removeSocket();
         this.idleBuffer.length = 0;
         this.reciveBuffer = null;
         this.reciveCallbacks.length = 0;
