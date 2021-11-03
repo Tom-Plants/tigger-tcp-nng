@@ -9,9 +9,9 @@ export default class Tunnel implements ITunnel {
     private reciveBuffer: Buffer | null | undefined;
     private reciveCallbacks: Array<DataReciveCallback>;
     private drainCallbacks: Array<VoidCallBack>;
-    protected readyCallbacks: Array<VoidCallBack>;
-    protected reconnectingCallbacks: Array<VoidCallBack>;
-    protected _connected: boolean;
+    private readyCallbacks: Array<VoidCallBack>;
+    private reconnectingCallbacks: Array<VoidCallBack>;
+    private _connected: boolean;
 
 
     constructor() {
@@ -22,19 +22,78 @@ export default class Tunnel implements ITunnel {
         this.reconnectingCallbacks = new Array<VoidCallBack>();
         this._connected = false;
     }
-    connected(): boolean {
+
+    /**
+     * 释放Tunnel占用的一些资源，并且断开连接
+     */
+    public destroy(): void {
+        this.socket?.destroy();
+        this.idleBuffer.length = 0;
+        this.reciveBuffer = null;
+        this.reciveCallbacks.length = 0;
+        this.drainCallbacks.length = 0;
+        this.readyCallbacks.length = 0;
+        this.reconnectingCallbacks.length = 0;
+    }
+
+    /**
+     * true表示已连接，false表示未连接
+     * @returns true表示已连接，false表示未连接
+     */
+    public connected(): boolean {
         return this._connected;
     }
-    onReady(callback: VoidCallBack): void {
+
+    /**
+     * 注册连接成功事件
+     * @param callback 连接成功回调
+     */
+    public onReady(callback: VoidCallBack): void {
         this.readyCallbacks.push(callback);
     }
-    onReconnecting(callback: VoidCallBack): void {
+
+    /**
+     * 注册“连接断开，并尝试重连”的事件
+     * @param callback 连接断开回调
+     */
+    public onReconnecting(callback: VoidCallBack): void {
         this.reconnectingCallbacks.push(callback);
     }
+
+    /**
+     * 向Tunnel指示已经成功连接
+     */
+    protected tunnelConnected(): void {
+        this._connected = true;
+        for(let i of this.readyCallbacks)
+        {
+            i();
+        }
+    }
+    /**
+     * 向Tunnel指示连接已断开
+     */
+    protected tunnelDisconnected(): void {
+        this._connected = false;
+        for(let i of this.reconnectingCallbacks)
+        {
+            i();
+        }
+    }
+
+    /**
+     * Tunnel内的数据已经无拥塞
+     * @param callback Tunnel Drian callback
+     */
     public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);
     }
 
+    /**
+     * 将数据发送到已连接到的对端
+     * @param data 将要发送的数据
+     * @returns 当返回false时，表示发送成功但缓冲区已满，需要限流，反之亦然。
+     */
     public sendData(data: Buffer): boolean {
         let bufferlength = data.length;
         let length_buffer = Buffer.from([0, 0, 0, 0]);
@@ -44,33 +103,45 @@ export default class Tunnel implements ITunnel {
         this.idleBuffer.push(buffer_send);
         return this.pushData();
     }
+
+    /**
+     * 注册数据已接收到事件
+     * @param callback 接收到的数据
+     */
     public onDataRecived(callback: DataReciveCallback): void {
         this.reciveCallbacks.push(callback);
     }
 
-    protected setSocket(socket: Socket) {
-        this.socket = socket;
-        socket.on("drain", () => {
-            if(this.pushData()) {
-                for(let callback of this.drainCallbacks) {
-                    callback();
-                }
-            }
-        }).on("data", (data: Buffer) => {
-            this.handleData(data);
-        });
-
-        socket.setKeepAlive(true, 1000);
+    /**
+     * 设置Tunnel对象的socket属性
+     * @param socket 向Tunnel告知Socket实例
+     * @description 必须调用此函数，否则任何功能将无法正常使用
+     */
+    protected setSocket(socket: Socket): Socket {
+        this.socket =   socket.on("drain", () => {
+                            if(this.pushData()) {
+                                for(let callback of this.drainCallbacks) {
+                                    callback();
+                                }
+                            }
+                        }).on("data", (data: Buffer) => {
+                            this.handleData(data);
+                        }).setKeepAlive(true, 500);
+        return socket;
     }
+
+    /**
+     * 移除Tunnel对象的socket属性实例
+     */
     protected removeSocket() {
         this.socket?.destroy();
         this.socket = undefined;
     }
-    protected hasSocket(): boolean {
-        if(this.socket == undefined) return false;
-        return true;
-    }
 
+    /**
+     * 传输数据
+     * @returns 如果在一轮数据传输之后，缓冲区内还有数据，则返回false，否则返回true
+     */
     private pushData(): boolean {
         if(this.socket == undefined) return false;
         while(true) {
@@ -81,7 +152,11 @@ export default class Tunnel implements ITunnel {
         }
     }
 
-    public isDrained():boolean {
+    /**
+     * 此连接是否需要节流
+     * @returns 如果缓冲区内还有数据则返回false，否则返回true
+     */
+    public isBlocked():boolean {
         return (this.idleBuffer.length == 0);
     }
 

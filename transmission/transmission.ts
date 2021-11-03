@@ -46,23 +46,64 @@ export default class Transmission implements ITransmission {
         });
     }
 
-    onReconnecting(callback: VoidCallBack): void {
+    /**
+     * 关闭所有连接
+     */
+    public destory(): void {
+        this.drainCallbacks.length = 0;
+        this.readyCallbacks.length = 0;
+        this.dataReciveCallbacks.length = 0;
+        this.reconnectingCallbacks.length = 0;
+
+        if(this.peers != undefined) {
+            for(let i of this.peers)
+            {
+                i.destroy();
+            }
+        }
+    }
+
+    /**
+     * 注册重连事件
+     * @param callback 正在重连回调
+     */
+    public onReconnecting(callback: VoidCallBack): void {
         this.reconnectingCallbacks.push(callback);
     }
-    onReady(callback: VoidCallBack): void {
+
+    /**
+     * 注册连接成功事件
+     * @param callback 连接成功
+     */
+    public onReady(callback: VoidCallBack): void {
         this.readyCallbacks.push(callback);
     }
 
+    /**
+     * 设置Tunnel实例集
+     * @param peers Tunnel实例集
+     * @description 使用前必须设置实例集，否则无法工作
+     */
     protected setPeers(peers: Array<ITunnel>) {
         this.peers = peers;
         this.openTunnels(this.host, this.port, this.tunnelN);
     }
 
+    /**
+     * 获取Tunnel实例集
+     * @returns 获取的实例集
+     */
     protected getPeers(): Array<ITunnel> | undefined {
         return this.peers;
     }
 
-    openTunnels(host: string, port: number, tunnelN: number) {
+    /**
+     * 设置Tunnel实例集
+     * @param host 主机名
+     * @param port 端口
+     * @param tunnelN 通道数
+     */
+    protected openTunnels(host: string, port: number, tunnelN: number): void {
         if(this.peers == undefined) return;
         for(let value of this.peers) {
             value.onDataRecived((data: Buffer) => {
@@ -73,10 +114,9 @@ export default class Transmission implements ITransmission {
                 if(this.peers == undefined) return;
                 for(let i of this.peers)
                 {
-                    if(!i.isDrained()) {
+                    if(!i.isBlocked()) {
                         stoped = true;
                     }
-
                 }
                 if(stoped) return;
                 for(let i of this.drainCallbacks) {
@@ -112,7 +152,13 @@ export default class Transmission implements ITransmission {
     }
 
 
-    sendData(data: Buffer, sourcePort: number): boolean {
+    /**
+     * 在Tunnel集中，发送数据
+     * @param data 数据
+     * @param sourcePort 源端口
+     * @returns 如果出现拥塞，则返回true
+     */
+    public sendData(data: Buffer, sourcePort: number): boolean {
         let splitBuffer = this.patcher.patch(data, sourcePort);
         let sendBlocked = false;
         //console.log(">", sourcePort, data);
@@ -124,18 +170,35 @@ export default class Transmission implements ITransmission {
         }
         return !sendBlocked;
     }
-    onDataRecived(callback: TDataReciveCallback): void {
+
+    /**
+     * 注册数据接收事件
+     * @param callback 数据输出回调
+     */
+    public onDataRecived(callback: TDataReciveCallback): void {
         this.dataReciveCallbacks.push(callback);
     }
-    onDrain(callback: VoidCallBack): void {
+
+    /**
+     * 注册拥塞结束事件
+     * @param callback 拥塞结束回调
+     */
+    public onDrain(callback: VoidCallBack): void {
         this.drainCallbacks.push(callback);
     }
 
-    isPaused(): boolean {
+    /**
+     * Tunnel集是否阻塞
+     * @returns 如果Tunnel集的阻塞标志都为false，则返回false，否则返回true
+     */
+    public isPaused(): boolean {
         let paused = false;
         if(this.peers == undefined) throw "the peers is not set";
         for(let value of this.peers) {
-            if(!value.isDrained()) paused = true;
+            if(value.isBlocked()){
+                paused = true;
+                break;
+            }
         }
         return paused;
     }

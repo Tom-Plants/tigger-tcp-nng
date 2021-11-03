@@ -20,7 +20,26 @@ export default function StartClient(host: string, port: number, host_listen: str
     real_client = new Client(host, port, tunnelN);
     fake_client = new FClient(host, port, tunnelN);
 
-    real_client.onDataRecived(onDataRecive);
+    let regRealClient = (c: Client) => {
+        c.onDataRecived(onDataRecive);
+        c.onDrain(() => {
+            mapper.forEach((value: Socket) => {
+                value.resume();
+            });
+        });
+        c.onReady(() => {
+            fake_client.stopLifeCheck();
+            client = real_client;
+        });
+        c.onReconnecting(() => {
+            fake_client.startLifeCheck();
+            client = fake_client;
+
+            real_client.destory();
+            real_client = new Client(host, port, tunnelN);
+            regRealClient(real_client);
+        });
+    }
     fake_client.onDataRecived(onDataRecive);
     fake_client.regLifeCheck(() => {
         mapper.forEach((value: Socket, key: number) => {
@@ -28,21 +47,10 @@ export default function StartClient(host: string, port: number, host_listen: str
             mapper.delete(key);
         });
     });
-    real_client.onDrain(() => {
-        mapper.forEach((value: Socket) => {
-            value.resume();
-        });
-    });
-    real_client.onReady(() => {
-        fake_client.stopLifeCheck();
-        client = real_client;
-    });
-    real_client.onReconnecting(() => {
-        fake_client.startLifeCheck();
-        client = fake_client;
-    });
+    regRealClient(real_client);
 
     client = fake_client;
+
 
 
 

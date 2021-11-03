@@ -2,10 +2,12 @@ import { TDataReciveCallback, VoidCallBack } from "../public/types";
 
 export default interface ITransmission {
     sendData(data: Buffer, sourcePort: number): boolean;
+    destory(): void;
+
     onDataRecived(callback: TDataReciveCallback): void;
     onDrain(callback: VoidCallBack): void;
-    openTunnels(host: string, port: number, n: number): void;
-    isPaused(): boolean;
     onReady(callback: VoidCallBack): void;
     onReconnecting(callback: VoidCallBack): void;
+
+    isPaused(): boolean;
 }

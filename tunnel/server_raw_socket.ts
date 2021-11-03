@@ -8,25 +8,18 @@ export default class RawSocketServer extends Tunnel {
         server.listen(port, host, () => {
             console.log("tunnel listening", host, ":", port);
         }).on("connection", (socket: Socket) => {
-            if(this.hasSocket()) {
+            if(this.connected()) {
                 socket.destroy();
                 return;
             }
 
-            this.setSocket(socket);
-            this._connected = true;
-            for(let i of this.readyCallbacks) {
-                i();
-            }
-            console.log(port, "connected");
-            socket.on("close", () => {
+            this.setSocket(socket)
+            .on("close", () => {
                 this.removeSocket();
-                this._connected = false;
-                for(let i of this.reconnectingCallbacks) {
-                    i();
-                }
-                console.log(port, "disconnected");
+                this.tunnelDisconnected();
             }).on("error", () => {});
+
+            this.tunnelConnected();
         });
     }
 }

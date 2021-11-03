@@ -6,21 +6,14 @@ export default class RawSocketClient extends Tunnel {
         super();
 
         let client = new Socket();
-        client.connect({host, port});
-
-        client.on("connect", () => {
+        client.connect({host, port})
+        .on("connect", () => {
             this.setSocket(client);
-            this._connected = true;
-            for(let i of this.readyCallbacks) {
-                i();
-            }
+            this.tunnelConnected();
         }).on("close", () => {
             this.removeSocket();
+            this.tunnelDisconnected();
             client.connect({host, port});
-            this._connected = false;
-            for(let i of this.reconnectingCallbacks)  {
-                i();
-            }
         }).on("error", () => {});
     }
 }
