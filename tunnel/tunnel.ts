@@ -107,7 +107,7 @@ export default class Tunnel implements ITunnel {
 
         this.idleBuffer.push(buffer_send);
         this._blocking = !this.pushData();
-        return this._blocking;
+        return !this._blocking;
     }
 
     /**
