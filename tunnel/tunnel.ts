@@ -157,7 +157,7 @@ export default class Tunnel implements ITunnel {
      * @returns 如果缓冲区内还有数据则返回false，否则返回true
      */
     public isBlocked():boolean {
-        return (this.idleBuffer.length == 0);
+        return (this.idleBuffer.length != 0);
     }
 
     
