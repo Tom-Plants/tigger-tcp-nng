@@ -52,6 +52,7 @@ export default function StartClient(host: string, port: number, host_listen: str
         regRealClient(real_client);
     }
 
+    return;
     setInterval(() => {
         dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
         mapper.forEach((value: Socket, num: number) => {
@@ -59,7 +60,7 @@ export default function StartClient(host: string, port: number, host_listen: str
         });
         dfConsole.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
         dfConsole.show();
-    }, 100);
+    }, 1000);
 }
 
 
