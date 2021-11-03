@@ -37,6 +37,11 @@ export default function StartClient(host: string, port: number, host_listen: str
                 client = real_client;
             });
             c.onReconnecting(() => {
+                mapper.forEach((value: Socket, key:number) => {
+                    value.destroy();
+                    mapper.delete(key);
+                });
+
                 client = fake_client;
 
                 real_client.destory();
