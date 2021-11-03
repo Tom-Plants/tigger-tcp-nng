@@ -18,12 +18,14 @@ export default class RawSocketServer extends Tunnel {
             for(let i of this.readyCallbacks) {
                 i();
             }
+            console.log(port, "connected");
             socket.on("close", () => {
                 this.removeSocket();
                 this._connected = false;
                 for(let i of this.reconnectingCallbacks) {
                     i();
                 }
+                console.log(port, "disconnected");
             }).on("error", () => {});
         });
     }
