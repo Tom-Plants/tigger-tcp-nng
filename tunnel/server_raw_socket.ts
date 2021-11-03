@@ -1,11 +1,13 @@
+import { Server } from "net";
 import { createServer, Socket } from "net";
 import Tunnel from "./tunnel";
 
 export default class RawSocketServer extends Tunnel {
+    private server: Server;
     constructor(host: string, port: number) {
         super();
-        let server = createServer();
-        server.listen(port, host, () => {
+        this.server = createServer();
+        this.server.listen(port, host, () => {
             console.log("tunnel listening", host, ":", port);
         }).on("connection", (socket: Socket) => {
             if(this.connected()) {
@@ -21,5 +23,10 @@ export default class RawSocketServer extends Tunnel {
 
             this.tunnelConnected();
         });
+    }
+
+    public destroy(): void {
+        this.server.close();
+        super.destroy();
     }
 }

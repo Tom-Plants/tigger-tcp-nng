@@ -3,6 +3,7 @@ import Mapper from "./Mapper";
 import Server from "./transmission/server";
 import CServer from "./controller/server";
 import DoubleBufferedConsole from "./console/doublebufferedconsole";
+import ITransmission from "./transmission/itransmission";
 
 let mapper: Map<number, Socket>;
 let server: Server;
@@ -27,22 +28,33 @@ export default function StartServer(
 
     mapper = new Map<number, Socket>();
 
+
+    let setupServer = (s: ITransmission) => {
+        s.onDataRecived(onDataRecive);
+        s.onDrain(() => {
+            mapper.forEach((value: Socket) => {
+                value.resume();
+            });
+        });
+        s.onReconnecting(() => {
+            mapper.forEach((value: Socket, key: number) => {
+                value.destroy();
+                mapper.delete(key);
+            });
+            s.destory();
+
+            server = new Server(host, port, tunnelN);
+            setupServer(server);
+
+            dfConsole.log(">>>>>Server Tunnels has been disconnected !");
+        });
+        s.onReady(() => {
+            dfConsole.log(">>>>>Server Tunnels has been connected all !");
+        });
+    }
+
     server = new Server(host, port, tunnelN);
-    server.onDataRecived(onDataRecive);
-    server.onDrain(() => {
-        mapper.forEach((value: Socket) => {
-            value.resume();
-        });
-    });
-    server.onReconnecting(() => {
-        mapper.forEach((value: Socket, key: number) => {
-            value.destroy();
-            mapper.delete(key);
-        });
-    });
-    server.onReady(() => {
-        
-    });
+    setupServer(server);
 
 
     setInterval(() => {

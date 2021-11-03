@@ -13,53 +13,46 @@ let fake_client: FClient;
 
 export default function StartClient(host: string, port: number, host_listen: string, port_listen: number, tunnelN: number) {
     dfConsole = new DoubleBufferedConsole();
-
     mapper = new Map<number, Socket>();
+
     createLocalServer(port_listen, host_listen);
 
-    real_client = new Client(host, port, tunnelN);
-    fake_client = new FClient(host, port, tunnelN);
 
-    let regRealClient = (c: Client) => {
-        c.onDataRecived(onDataRecive);
-        c.onDrain(() => {
-            mapper.forEach((value: Socket) => {
-                value.resume();
-            });
-        });
-        c.onReady(() => {
-            fake_client.stopLifeCheck();
-            client = real_client;
-        });
-        c.onReconnecting(() => {
-            fake_client.startLifeCheck();
-            client = fake_client;
-
-            real_client.destory();
-            real_client = new Client(host, port, tunnelN);
-            regRealClient(real_client);
-        });
+    {
+        fake_client = new FClient(host, port, tunnelN);
+        fake_client.onDataRecived(onDataRecive);
+        client = fake_client;
     }
-    fake_client.onDataRecived(onDataRecive);
-    fake_client.regLifeCheck(() => {
-        mapper.forEach((value: Socket, key: number) => {
-            value.destroy();
-            mapper.delete(key);
-        });
-    });
-    regRealClient(real_client);
 
-    client = fake_client;
+    {
+        real_client = new Client(host, port, tunnelN);
+        let regRealClient = (c: Client) => {
+            c.onDataRecived(onDataRecive);
+            c.onDrain(() => {
+                mapper.forEach((value: Socket) => {
+                    value.resume();
+                });
+            });
+            c.onReady(() => {
+                client = real_client;
+            });
+            c.onReconnecting(() => {
+                client = fake_client;
 
-
-
+                real_client.destory();
+                real_client = new Client(host, port, tunnelN);
+                regRealClient(real_client);
+            });
+        }
+        regRealClient(real_client);
+    }
 
     setInterval(() => {
         dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
         mapper.forEach((value: Socket, num: number) => {
             dfConsole.log("|||||", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "|||||");
         });
-        dfConsole.log('.');
+        dfConsole.log('^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^');
         dfConsole.show();
     }, 100);
 }
