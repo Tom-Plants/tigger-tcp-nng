@@ -12,6 +12,7 @@ export default class Tunnel implements ITunnel {
     private readyCallbacks: Array<VoidCallBack>;
     private reconnectingCallbacks: Array<VoidCallBack>;
     private _connected: boolean;
+    private _blocking: boolean;
 
 
     constructor() {
@@ -21,6 +22,7 @@ export default class Tunnel implements ITunnel {
         this.readyCallbacks = new Array<VoidCallBack>();
         this.reconnectingCallbacks = new Array<VoidCallBack>();
         this._connected = false;
+        this._blocking = true;
     }
 
     /**
@@ -34,6 +36,7 @@ export default class Tunnel implements ITunnel {
         this.drainCallbacks.length = 0;
         this.readyCallbacks.length = 0;
         this.reconnectingCallbacks.length = 0;
+        this._blocking = true;
     }
 
     /**
@@ -64,6 +67,7 @@ export default class Tunnel implements ITunnel {
      * 向Tunnel指示已经成功连接
      */
     protected tunnelConnected(): void {
+        this._blocking = false;
         this._connected = true;
         for(let i of this.readyCallbacks)
         {
@@ -74,6 +78,7 @@ export default class Tunnel implements ITunnel {
      * 向Tunnel指示连接已断开
      */
     protected tunnelDisconnected(): void {
+        this._blocking = true;
         this._connected = false;
         for(let i of this.reconnectingCallbacks)
         {
@@ -101,7 +106,8 @@ export default class Tunnel implements ITunnel {
         let buffer_send = Buffer.concat([length_buffer, data]);
 
         this.idleBuffer.push(buffer_send);
-        return this.pushData();
+        this._blocking = !this.pushData();
+        return this._blocking;
     }
 
     /**
@@ -120,6 +126,7 @@ export default class Tunnel implements ITunnel {
     protected setSocket(socket: Socket): Socket {
         this.socket =   socket.on("drain", () => {
                             if(this.pushData()) {
+                                this._blocking = false;
                                 for(let callback of this.drainCallbacks) {
                                     callback();
                                 }
@@ -136,6 +143,7 @@ export default class Tunnel implements ITunnel {
     protected removeSocket() {
         this.socket?.destroy();
         this.socket = undefined;
+        this._blocking = true;
     }
 
     /**
@@ -157,7 +165,7 @@ export default class Tunnel implements ITunnel {
      * @returns 如果缓冲区内还有数据则返回false，否则返回true
      */
     public isBlocked():boolean {
-        return (this.idleBuffer.length != 0);
+        return this._blocking;
     }
 
     

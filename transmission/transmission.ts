@@ -110,15 +110,13 @@ export default class Transmission implements ITransmission {
                 this.mixer.input(data);
             });
             value.onDrain(() => {
-                let stoped:boolean = false;
                 if(this.peers == undefined) return;
                 for(let i of this.peers)
                 {
                     if(i.isBlocked()) {
-                        stoped = true;
+                        return;
                     }
                 }
-                if(stoped) return;
                 for(let i of this.drainCallbacks) {
                     i();
                 }
@@ -192,14 +190,12 @@ export default class Transmission implements ITransmission {
      * @returns 如果Tunnel集的阻塞标志都为false，则返回false，否则返回true
      */
     public isPaused(): boolean {
-        let paused = false;
         if(this.peers == undefined) throw "the peers is not set";
         for(let value of this.peers) {
             if(value.isBlocked()){
-                paused = true;
-                break;
+                return true;
             }
         }
-        return paused;
+        return false;
     }
 }
