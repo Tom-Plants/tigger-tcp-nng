@@ -23,8 +23,9 @@ export default function StartClient(host: string, port: number, host_listen: str
     real_client.onDataRecived(onDataRecive);
     fake_client.onDataRecived(onDataRecive);
     fake_client.regLifeCheck(() => {
-        mapper.forEach((value: Socket) => {
-            value.resume();
+        mapper.forEach((value: Socket, key: number) => {
+            value.destroy();
+            mapper.delete(key);
         });
     });
     real_client.onDrain(() => {
@@ -33,13 +34,8 @@ export default function StartClient(host: string, port: number, host_listen: str
         });
     });
     real_client.onReady(() => {
-        client = real_client;
-        let idlePacket: IdleData | undefined;
-        while(undefined != (idlePacket = fake_client.getIdleData().shift()))
-        {
-            client.sendData(idlePacket.d, idlePacket.p);
-        }
         fake_client.stopLifeCheck();
+        client = real_client;
     });
     real_client.onReconnecting(() => {
         fake_client.startLifeCheck();
@@ -53,9 +49,9 @@ export default function StartClient(host: string, port: number, host_listen: str
     setInterval(() => {
         dfConsole.log(">>>>>>", "transmission status,  paused ?:", client.isPaused(), "<<<<<<");
         mapper.forEach((value: Socket, num: number) => {
-            dfConsole.log(">>>>>>", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "<<<<<<");
+            dfConsole.log("|||||", {pause: value.isPaused(), num, upload: value.bytesWritten, download: value.bytesRead}, "|||||");
         });
-        dfConsole.log('-------------------------------------------------------');
+        dfConsole.log('.');
         dfConsole.show();
     }, 100);
 }
@@ -98,7 +94,6 @@ function createLocalServer(port_listen: number, host_listen: string): Server {
             mapper.get(referPort)?.destroy();
             mapper.delete(referPort);
         }).on("end", () => {
-            console.log("CHALF", referPort);
             client.sendData(Buffer.from("CHALF"), referPort);
         }).on("data", (data: Buffer) => {
             if(client.sendData(data, referPort) == false) {

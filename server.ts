@@ -34,6 +34,15 @@ export default function StartServer(
             value.resume();
         });
     });
+    server.onReconnecting(() => {
+        mapper.forEach((value: Socket, key: number) => {
+            value.destroy();
+            mapper.delete(key);
+        });
+    });
+    server.onReady(() => {
+        
+    });
 
 
     setInterval(() => {

@@ -3,13 +3,11 @@ import { TDataReciveCallback, VoidCallBack } from "../public/types";
 import Transmission from "./transmission";
 
 export type IdleData = {d: Buffer, p: number};
-export default class FakeClient extends Transmission{
-    private idleBuffer: Array<IdleData>;
+export default class FakeTransmission extends Transmission{
     private lifeCheckCallbacks: Array<VoidCallBack>;
     private timer: NodeJS.Timer | undefined;
     constructor(host: string, port: number, n: number) {
         super(host, port, n);
-        this.idleBuffer = new Array<IdleData>();
         this.lifeCheckCallbacks = new Array<VoidCallBack>();
 
         this.startLifeCheck();
@@ -27,13 +25,7 @@ export default class FakeClient extends Transmission{
             return false;
         }
 
-        this.idleBuffer.push({d: data, p: sourcePort})
-
         return false;
-    }
-
-    getIdleData(): Array<IdleData> {
-        return this.idleBuffer;
     }
 
     isPaused(): boolean {
